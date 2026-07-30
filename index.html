@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#12101f">
+  <title>Imposter — Party Game</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <div class="home-hero">
+        <div class="home-mask">🎭</div>
+        <h1 class="home-title">Imposter</h1>
+        <p class="home-tagline">Everyone knows the secret word.<br>Except one of you.</p>
+      </div>
+      <div class="stack">
+        <button class="btn btn-primary btn-big" id="btn-new-game">New Game</button>
+        <button class="btn btn-ghost" id="btn-how-to">How to Play</button>
+      </div>
+      <p class="home-foot">Pass &amp; play · works offline · 3–12 players</p>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section class="screen" id="screen-help">
+      <header class="topbar">
+        <button class="btn btn-back" data-back="screen-home">‹ Back</button>
+        <h2>How to Play</h2>
+      </header>
+      <div class="card help-card">
+        <ol class="help-list">
+          <li><strong>Deal the roles.</strong> Pass the phone around. Everyone secretly sees the secret word — except the imposter, who sees nothing.</li>
+          <li><strong>Give clues.</strong> Going around the circle, each player says <em>one word</em> related to the secret word. The imposter has to improvise and blend in.</li>
+          <li><strong>Discuss.</strong> Too vague? Too obvious? Debate who doesn't seem to know the word.</li>
+          <li><strong>Vote.</strong> Point at your suspect on three, then record the group's accusation.</li>
+          <li><strong>Reveal.</strong> If the imposter is caught, they get one chance to guess the secret word and steal the win. If an innocent player is accused, the imposter wins.</li>
+        </ol>
+        <p class="help-tip">💡 Tip: clues that are too specific hand the word to the imposter — clues that are too vague make <em>you</em> look like the imposter.</p>
+      </div>
+    </section>
+
+    <!-- SETUP -->
+    <section class="screen" id="screen-setup">
+      <header class="topbar">
+        <button class="btn btn-back" data-back="screen-home">‹ Back</button>
+        <h2>Game Setup</h2>
+      </header>
+
+      <div class="card">
+        <div class="row-between">
+          <span class="setting-label">Players</span>
+          <div class="stepper">
+            <button class="stepper-btn" id="players-minus" aria-label="Fewer players">−</button>
+            <span class="stepper-value" id="players-count">4</span>
+            <button class="stepper-btn" id="players-plus" aria-label="More players">+</button>
+          </div>
+        </div>
+        <div id="player-names" class="player-names"></div>
+      </div>
+
+      <div class="card">
+        <div class="row-between">
+          <span class="setting-label">Imposters</span>
+          <div class="stepper">
+            <button class="stepper-btn" id="imposters-minus" aria-label="Fewer imposters">−</button>
+            <span class="stepper-value" id="imposters-count">1</span>
+            <button class="stepper-btn" id="imposters-plus" aria-label="More imposters">+</button>
+          </div>
+        </div>
+        <p class="setting-hint" id="imposters-hint"></p>
+      </div>
+
+      <div class="card">
+        <span class="setting-label">Category</span>
+        <div class="chips" id="category-chips"></div>
+      </div>
+
+      <div class="card">
+        <span class="setting-label">Difficulty</span>
+        <div class="chips" id="difficulty-chips">
+          <button class="chip" data-difficulty="easy">Easy</button>
+          <button class="chip" data-difficulty="medium">Medium</button>
+          <button class="chip" data-difficulty="hard">Hard</button>
+          <button class="chip chip-selected" data-difficulty="mixed">Mixed</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label class="row-between toggle-row">
+          <span>
+            <span class="setting-label">Show category to imposter</span>
+            <span class="setting-hint">Easier for the imposter to blend in</span>
+          </span>
+          <input type="checkbox" id="hint-toggle" class="toggle" checked>
+        </label>
+      </div>
+
+      <div class="card">
+        <span class="setting-label">Discussion timer</span>
+        <div class="chips" id="timer-chips">
+          <button class="chip" data-timer="0">Off</button>
+          <button class="chip" data-timer="60">1 min</button>
+          <button class="chip chip-selected" data-timer="120">2 min</button>
+          <button class="chip" data-timer="180">3 min</button>
+          <button class="chip" data-timer="300">5 min</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-big" id="btn-start">Start Round</button>
+    </section>
+
+    <!-- REVEAL (pass & play) -->
+    <section class="screen" id="screen-reveal">
+      <div class="reveal-wrap">
+        <p class="reveal-progress" id="reveal-progress"></p>
+
+        <div id="reveal-pass" class="reveal-stage">
+          <div class="reveal-emoji">📱</div>
+          <h2 class="reveal-name" id="reveal-pass-name"></h2>
+          <p class="reveal-sub">Take the phone and make sure<br>no one else can see the screen.</p>
+          <button class="btn btn-primary btn-big" id="btn-show-role">Show My Role</button>
+        </div>
+
+        <div id="reveal-role" class="reveal-stage hidden">
+          <div class="role-card" id="role-card">
+            <div class="role-emoji" id="role-emoji"></div>
+            <p class="role-heading" id="role-heading"></p>
+            <p class="role-word" id="role-word"></p>
+            <p class="role-note" id="role-note"></p>
+          </div>
+          <button class="btn btn-primary btn-big" id="btn-hide-role">Got It — Hide &amp; Pass</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISCUSSION -->
+    <section class="screen" id="screen-discussion">
+      <div class="discussion-wrap">
+        <h2 class="phase-title">Discussion</h2>
+        <div class="card starter-card">
+          <p class="starter-label">First clue</p>
+          <p class="starter-name" id="starter-name"></p>
+          <p class="starter-sub" id="starter-direction"></p>
+        </div>
+        <div class="timer" id="timer-block">
+          <div class="timer-display" id="timer-display">2:00</div>
+          <button class="btn btn-ghost" id="btn-timer-toggle">Start Timer</button>
+        </div>
+        <p class="discussion-hint">One clue word each, then debate.<br>When you're ready, take the vote.</p>
+        <button class="btn btn-primary btn-big" id="btn-to-vote">Go to Vote</button>
+      </div>
+    </section>
+
+    <!-- VOTE -->
+    <section class="screen" id="screen-vote">
+      <div class="vote-wrap">
+        <h2 class="phase-title">Who is the imposter?</h2>
+        <p class="vote-sub">Point at your suspect on three — then tap the group's accusation.</p>
+        <div class="vote-grid" id="vote-grid"></div>
+        <button class="btn btn-ghost" id="btn-no-vote">Skip vote — just reveal</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screen-result">
+      <div class="result-wrap">
+        <div class="result-emoji" id="result-emoji"></div>
+        <h2 class="result-title" id="result-title"></h2>
+        <p class="result-sub" id="result-sub"></p>
+        <div class="card reveal-word-card">
+          <p class="reveal-word-label">The secret word was</p>
+          <p class="reveal-word" id="result-word"></p>
+          <p class="result-imposters" id="result-imposters"></p>
+        </div>
+        <p class="steal-note" id="steal-note"></p>
+        <div class="scoreboard" id="scoreboard"></div>
+        <div class="stack">
+          <button class="btn btn-primary btn-big" id="btn-play-again">Play Again</button>
+          <button class="btn btn-ghost" id="btn-change-setup">Change Setup</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <script src="js/words.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
