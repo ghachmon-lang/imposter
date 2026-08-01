@@ -1,13 +1,15 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "imposter.settings.v1";
+  const STORAGE_KEY = "imposter.settings.v2";
+  const LEGACY_KEY = "imposter.settings.v1";
+  const ALL_KEYS = Object.keys(WORDS);
 
   const settings = {
     playerCount: 4,
     names: [],
     imposterCount: 1,
-    category: "random",
+    categories: [...ALL_KEYS],
     difficulty: "mixed",
     showHint: true,
     timerSeconds: 120,
@@ -17,8 +19,9 @@
     categoryKey: null,
     word: null,
     imposters: [],   // player indices
-    revealIndex: 0,
-    roleShown: false,
+    viewed: [],      // booleans per player
+    current: -1,     // player index on the word screen
+    revealed: false,
     starter: 0,
     clockwise: true,
   };
@@ -44,6 +47,10 @@
     return raw || `Player ${i + 1}`;
   }
 
+  function initial(i) {
+    return playerName(i).trim().charAt(0).toUpperCase();
+  }
+
   function randomInt(n) {
     return Math.floor(Math.random() * n);
   }
@@ -60,18 +67,28 @@
 
   function loadSettings() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      let saved = raw ? JSON.parse(raw) : null;
+      if (!saved) {
+        const legacy = localStorage.getItem(LEGACY_KEY);
+        if (legacy) {
+          saved = JSON.parse(legacy);
+          saved.categories =
+            saved.category && WORDS[saved.category] ? [saved.category] : [...ALL_KEYS];
+        }
+      }
+      if (!saved) return;
       if (typeof saved.playerCount === "number") settings.playerCount = Math.min(12, Math.max(3, saved.playerCount));
       if (Array.isArray(saved.names)) settings.names = saved.names.map(String);
       if (typeof saved.imposterCount === "number") settings.imposterCount = saved.imposterCount;
-      if (typeof saved.category === "string" && (saved.category === "random" || WORDS[saved.category])) settings.category = saved.category;
+      if (Array.isArray(saved.categories)) {
+        const valid = saved.categories.filter((k) => WORDS[k]);
+        if (valid.length) settings.categories = valid;
+      }
       if (["easy", "medium", "hard", "mixed"].includes(saved.difficulty)) settings.difficulty = saved.difficulty;
       if (typeof saved.showHint === "boolean") settings.showHint = saved.showHint;
       if (typeof saved.timerSeconds === "number") settings.timerSeconds = saved.timerSeconds;
-      settings.imposterCount = Math.min(settings.imposterCount, maxImposters(settings.playerCount));
-      settings.imposterCount = Math.max(1, settings.imposterCount);
+      settings.imposterCount = Math.max(1, Math.min(settings.imposterCount, maxImposters(settings.playerCount)));
     } catch (e) { /* corrupt storage — fall back to defaults */ }
   }
 
@@ -83,7 +100,14 @@
     window.scrollTo(0, 0);
   }
 
-  // ---------- setup screen ----------
+  // ---------- game settings screen ----------
+
+  function categorySummary() {
+    if (settings.categories.length === ALL_KEYS.length) return "All categories";
+    const labels = settings.categories.map((k) => WORDS[k].label);
+    if (labels.length <= 3) return labels.join(", ");
+    return `${labels.slice(0, 3).join(", ")} +${labels.length - 3}`;
+  }
 
   function renderSetup() {
     $("players-count").textContent = settings.playerCount;
@@ -95,10 +119,8 @@
     $("imposters-count").textContent = settings.imposterCount;
     $("imposters-minus").disabled = settings.imposterCount <= 1;
     $("imposters-plus").disabled = settings.imposterCount >= cap;
-    $("imposters-hint").textContent =
-      cap === 1
-        ? "Up to 1 imposter with fewer than 6 players."
-        : `Up to ${cap} imposters with ${settings.playerCount} players.`;
+
+    $("cat-summary").textContent = categorySummary();
 
     const namesWrap = $("player-names");
     namesWrap.innerHTML = "";
@@ -116,9 +138,6 @@
       namesWrap.appendChild(input);
     }
 
-    document.querySelectorAll("#category-chips .chip").forEach((chip) => {
-      chip.classList.toggle("chip-selected", chip.dataset.category === settings.category);
-    });
     document.querySelectorAll("#difficulty-chips .chip").forEach((chip) => {
       chip.classList.toggle("chip-selected", chip.dataset.difficulty === settings.difficulty);
     });
@@ -128,33 +147,40 @@
     $("hint-toggle").checked = settings.showHint;
   }
 
-  function buildCategoryChips() {
-    const wrap = $("category-chips");
-    const randomChip = document.createElement("button");
-    randomChip.className = "chip";
-    randomChip.dataset.category = "random";
-    randomChip.textContent = "🎲 Random";
-    wrap.appendChild(randomChip);
-    for (const [key, cat] of Object.entries(WORDS)) {
-      const chip = document.createElement("button");
-      chip.className = "chip";
-      chip.dataset.category = key;
-      chip.textContent = `${cat.emoji} ${cat.label}`;
-      wrap.appendChild(chip);
+  // ---------- category selection screen ----------
+
+  function renderCategories() {
+    const grid = $("cat-grid");
+    grid.innerHTML = "";
+    for (const key of ALL_KEYS) {
+      const cat = WORDS[key];
+      const count = cat.easy.length + cat.medium.length + cat.hard.length;
+      const card = document.createElement("button");
+      card.className = "cat-card";
+      card.dataset.category = key;
+      card.classList.toggle("cat-selected", settings.categories.includes(key));
+      card.innerHTML =
+        `<span class="cat-check"><svg><use href="#i-check"/></svg></span>` +
+        `<span class="cat-name">${cat.emoji} ${cat.label}</span>` +
+        `<span class="cat-count">${count} words</span>`;
+      card.addEventListener("click", () => {
+        const i = settings.categories.indexOf(key);
+        if (i >= 0) {
+          if (settings.categories.length === 1) return; // keep at least one
+          settings.categories.splice(i, 1);
+        } else {
+          settings.categories.push(key);
+        }
+        card.classList.toggle("cat-selected", settings.categories.includes(key));
+        saveSettings();
+      });
+      grid.appendChild(card);
     }
-    wrap.addEventListener("click", (e) => {
-      const chip = e.target.closest(".chip");
-      if (!chip) return;
-      settings.category = chip.dataset.category;
-      saveSettings();
-      renderSetup();
-    });
   }
 
   // ---------- round lifecycle ----------
 
-  function wordPool(categoryKey) {
-    const cat = WORDS[categoryKey];
+  function difficultyPool(cat) {
     if (settings.difficulty === "mixed") {
       return [...cat.easy, ...cat.medium, ...cat.hard];
     }
@@ -162,19 +188,19 @@
   }
 
   function pickWord() {
-    const categoryKey =
-      settings.category === "random" ? sample(Object.keys(WORDS)) : settings.category;
-    const pool = wordPool(categoryKey);
-    let fresh = pool.filter((w) => !usedWords.has(w));
+    const entries = settings.categories.flatMap((key) =>
+      difficultyPool(WORDS[key]).map((word) => ({ key, word }))
+    );
+    let fresh = entries.filter((e) => !usedWords.has(e.word));
     if (fresh.length === 0) {
       // Pool exhausted this session — allow repeats again.
-      pool.forEach((w) => usedWords.delete(w));
-      fresh = pool;
+      entries.forEach((e) => usedWords.delete(e.word));
+      fresh = entries;
     }
-    const word = sample(fresh);
-    usedWords.add(word);
-    round.categoryKey = categoryKey;
-    round.word = word;
+    const pick = sample(fresh);
+    usedWords.add(pick.word);
+    round.categoryKey = pick.key;
+    round.word = pick.word;
   }
 
   function assignRoles() {
@@ -190,53 +216,113 @@
   function startRound() {
     pickWord();
     assignRoles();
-    round.revealIndex = 0;
-    round.roleShown = false;
+    round.viewed = Array(settings.playerCount).fill(false);
+    round.current = -1;
+    round.revealed = false;
     round.starter = randomInt(settings.playerCount);
     round.clockwise = Math.random() < 0.5;
-    renderReveal();
-    show("screen-reveal");
+    renderPlayers();
+    show("screen-players");
   }
 
-  // ---------- reveal ----------
+  // ---------- players grid ----------
 
-  function renderReveal() {
-    $("reveal-progress").textContent = `Player ${round.revealIndex + 1} of ${settings.playerCount}`;
-    $("reveal-pass-name").textContent = playerName(round.revealIndex);
-    $("reveal-pass").classList.toggle("hidden", round.roleShown);
-    $("reveal-role").classList.toggle("hidden", !round.roleShown);
+  function renderPlayers() {
+    const grid = $("player-grid");
+    grid.innerHTML = "";
+    for (let i = 0; i < settings.playerCount; i++) {
+      const card = document.createElement("button");
+      card.className = "player-card";
+      card.classList.toggle("viewed", round.viewed[i]);
+      card.disabled = round.viewed[i];
+      card.innerHTML =
+        (round.viewed[i] ? `<span class="viewed-badge"><svg><use href="#i-check"/></svg></span>` : "") +
+        `<span class="avatar">${initial(i)}</span>` +
+        `<span class="p-name">${playerName(i)}</span>`;
+      card.addEventListener("click", () => openWord(i));
+      grid.appendChild(card);
+    }
+    $("btn-to-discussion").classList.toggle("hidden", !round.viewed.every(Boolean));
+  }
 
-    if (!round.roleShown) return;
+  // ---------- word reveal ----------
 
-    const isImposter = round.imposters.includes(round.revealIndex);
-    const card = $("role-card");
-    card.classList.toggle("imposter", isImposter);
-    card.classList.toggle("crew", !isImposter);
+  function drawConfetti() {
+    const canvas = $("confetti-canvas");
+    const box = $("word-box");
+    const dpr = window.devicePixelRatio || 1;
+    const w = box.clientWidth || 340;
+    const h = box.clientHeight || 238;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+    const colors = ["#f9a8d4", "#a7f3d0", "#c4b5fd", "#fda4af", "#93c5fd", "#fde68a", "#99f6e4"];
+    const count = Math.round((w * h) / 900);
+    for (let i = 0; i < count; i++) {
+      ctx.globalAlpha = 0.55 + Math.random() * 0.45;
+      ctx.fillStyle = colors[randomInt(colors.length)];
+      ctx.beginPath();
+      ctx.arc(Math.random() * w, Math.random() * h, 2 + Math.random() * 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
 
+  function openWord(i) {
+    round.current = i;
+    round.revealed = false;
+
+    const isImposter = round.imposters.includes(i);
     const cat = WORDS[round.categoryKey];
-    if (isImposter) {
-      $("role-emoji").textContent = "🎭";
-      $("role-heading").textContent = "You are";
-      $("role-word").textContent = "The Imposter";
-      $("role-note").textContent = settings.showHint
-        ? `Category: ${cat.emoji} ${cat.label}. You don't know the word — blend in.`
-        : "You don't know the word. Listen closely and blend in.";
-    } else {
-      $("role-emoji").textContent = cat.emoji;
-      $("role-heading").textContent = "The secret word is";
-      $("role-word").textContent = round.word;
-      $("role-note").textContent = "Give clues that prove you know it — without giving it away.";
-    }
+    $("word-player-name").textContent = playerName(i);
+    $("word-category").textContent =
+      isImposter && !settings.showHint
+        ? "Category: ???"
+        : `Category: ${cat.label}`;
+
+    $("word-box").classList.remove("revealed");
+    $("word-content").classList.add("hidden");
+    $("tap-hint").classList.remove("hidden");
+    $("btn-got-it").classList.add("hidden");
+
+    show("screen-word");
+    requestAnimationFrame(drawConfetti);
   }
 
-  function nextReveal() {
-    round.roleShown = false;
-    round.revealIndex += 1;
-    if (round.revealIndex >= settings.playerCount) {
-      startDiscussion();
+  function revealWord() {
+    if (round.revealed) return;
+    round.revealed = true;
+
+    const isImposter = round.imposters.includes(round.current);
+    const text = $("word-text");
+    const note = $("word-note");
+    if (isImposter) {
+      text.textContent = "You're the Imposter!";
+      text.classList.add("imposter-text");
+      note.textContent = "You don't know the word — listen closely and blend in.";
+      note.classList.remove("hidden");
     } else {
-      renderReveal();
+      text.textContent = round.word;
+      text.classList.remove("imposter-text");
+      note.classList.add("hidden");
     }
+
+    $("word-box").classList.add("revealed");
+    $("word-content").classList.remove("hidden");
+    $("tap-hint").classList.add("hidden");
+    $("btn-got-it").classList.remove("hidden");
+  }
+
+  function closeWord(markViewed) {
+    if (markViewed || round.revealed) {
+      round.viewed[round.current] = true;
+    }
+    round.current = -1;
+    round.revealed = false;
+    renderPlayers();
+    show("screen-players");
   }
 
   // ---------- discussion & timer ----------
@@ -279,6 +365,7 @@
   }
 
   function startDiscussion() {
+    $("starter-avatar").textContent = initial(round.starter);
     $("starter-name").textContent = playerName(round.starter);
     $("starter-direction").textContent = round.clockwise
       ? "then continue clockwise ↻"
@@ -301,11 +388,13 @@
     const grid = $("vote-grid");
     grid.innerHTML = "";
     for (let i = 0; i < settings.playerCount; i++) {
-      const btn = document.createElement("button");
-      btn.className = "vote-btn";
-      btn.textContent = playerName(i);
-      btn.addEventListener("click", () => finishRound(i));
-      grid.appendChild(btn);
+      const card = document.createElement("button");
+      card.className = "player-card";
+      card.innerHTML =
+        `<span class="avatar">${initial(i)}</span>` +
+        `<span class="p-name">${playerName(i)}</span>`;
+      card.addEventListener("click", () => finishRound(i));
+      grid.appendChild(card);
     }
   }
 
@@ -367,7 +456,10 @@
     $("btn-how-to").addEventListener("click", () => show("screen-help"));
 
     document.querySelectorAll("[data-back]").forEach((btn) => {
-      btn.addEventListener("click", () => show(btn.dataset.back));
+      btn.addEventListener("click", () => {
+        if (btn.dataset.back === "screen-setup") renderSetup();
+        show(btn.dataset.back);
+      });
     });
 
     $("players-minus").addEventListener("click", () => {
@@ -391,6 +483,16 @@
       renderSetup();
     });
 
+    $("btn-open-categories").addEventListener("click", () => {
+      renderCategories();
+      show("screen-categories");
+    });
+    $("btn-select-all").addEventListener("click", () => {
+      settings.categories = [...ALL_KEYS];
+      saveSettings();
+      renderCategories();
+    });
+
     $("difficulty-chips").addEventListener("click", (e) => {
       const chip = e.target.closest(".chip");
       if (!chip) return;
@@ -412,11 +514,11 @@
 
     $("btn-start").addEventListener("click", startRound);
 
-    $("btn-show-role").addEventListener("click", () => {
-      round.roleShown = true;
-      renderReveal();
-    });
-    $("btn-hide-role").addEventListener("click", nextReveal);
+    $("word-box").addEventListener("click", revealWord);
+    $("btn-got-it").addEventListener("click", () => closeWord(true));
+    $("btn-word-back").addEventListener("click", () => closeWord(false));
+
+    $("btn-to-discussion").addEventListener("click", startDiscussion);
 
     $("btn-timer-toggle").addEventListener("click", toggleTimer);
     $("btn-to-vote").addEventListener("click", () => {
@@ -434,7 +536,6 @@
   }
 
   loadSettings();
-  buildCategoryChips();
   renderSetup();
   bind();
 })();
