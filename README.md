@@ -14,7 +14,7 @@ Built as a dependency-free web app: one phone, no internet, no install.
 ## Features
 
 - 🎭 3–12 players with editable names, 1–3 imposters
-- 📚 9 categories × 3 difficulty levels (~430 words), or fully random
+- 📚 24 categories × 3 difficulty levels (~970 words), or fully random
 - ⏱️ Optional discussion timer (1–5 minutes)
 - 💡 Optional category hint for the imposter
 - 🏆 Running score across rounds, with a fresh word every round
@@ -37,7 +37,7 @@ It's a static site, so it can be hosted anywhere (GitHub Pages works out of the 
 ```
 index.html      All screens (home, setup, reveal, discussion, vote, result)
 css/style.css   Dark party-game theme, mobile-first
-js/words.js     Word lists: 9 categories × easy/medium/hard
+js/words.js     Word lists: 24 categories × easy/medium/hard
 js/app.js       Game state, role dealing, timer, voting, scoring
 ```
 
