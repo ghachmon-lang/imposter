@@ -82,8 +82,7 @@
       if (Array.isArray(saved.names)) settings.names = saved.names.map(String);
       if (typeof saved.imposterCount === "number") settings.imposterCount = saved.imposterCount;
       if (Array.isArray(saved.categories)) {
-        const valid = saved.categories.filter((k) => WORDS[k]);
-        if (valid.length) settings.categories = valid;
+        settings.categories = saved.categories.filter((k) => WORDS[k]);
       }
       if (["easy", "medium", "hard", "mixed"].includes(saved.difficulty)) settings.difficulty = saved.difficulty;
       if (typeof saved.showHint === "boolean") settings.showHint = saved.showHint;
@@ -103,6 +102,7 @@
   // ---------- game settings screen ----------
 
   function categorySummary() {
+    if (settings.categories.length === 0) return "No categories selected";
     if (settings.categories.length === ALL_KEYS.length) return "All categories";
     const labels = settings.categories.map((k) => WORDS[k].label);
     if (labels.length <= 3) return labels.join(", ");
@@ -121,6 +121,7 @@
     $("imposters-plus").disabled = settings.imposterCount >= cap;
 
     $("cat-summary").textContent = categorySummary();
+    $("btn-start").disabled = settings.categories.length === 0;
 
     const namesWrap = $("player-names");
     namesWrap.innerHTML = "";
@@ -149,7 +150,13 @@
 
   // ---------- category selection screen ----------
 
+  function updateSelectToggle() {
+    $("btn-select-toggle").textContent =
+      settings.categories.length > 0 ? "Deselect all" : "Select all";
+  }
+
   function renderCategories() {
+    updateSelectToggle();
     const grid = $("cat-grid");
     grid.innerHTML = "";
     for (const key of ALL_KEYS) {
@@ -166,12 +173,12 @@
       card.addEventListener("click", () => {
         const i = settings.categories.indexOf(key);
         if (i >= 0) {
-          if (settings.categories.length === 1) return; // keep at least one
           settings.categories.splice(i, 1);
         } else {
           settings.categories.push(key);
         }
         card.classList.toggle("cat-selected", settings.categories.includes(key));
+        updateSelectToggle();
         saveSettings();
       });
       grid.appendChild(card);
@@ -487,8 +494,8 @@
       renderCategories();
       show("screen-categories");
     });
-    $("btn-select-all").addEventListener("click", () => {
-      settings.categories = [...ALL_KEYS];
+    $("btn-select-toggle").addEventListener("click", () => {
+      settings.categories = settings.categories.length > 0 ? [] : [...ALL_KEYS];
       saveSettings();
       renderCategories();
     });
