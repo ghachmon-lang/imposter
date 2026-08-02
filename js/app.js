@@ -764,4 +764,10 @@
   loadSettings();
   renderSetup();
   bind();
+
+  // Installable app: offline cache via service worker (http/https only —
+  // silently skipped on file:// and hosts that don't allow it).
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
 })();
