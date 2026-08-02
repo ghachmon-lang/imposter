@@ -13,6 +13,7 @@ Built as a dependency-free web app: one phone, no internet, no install.
 
 ## Features
 
+- 🌐 Fully bilingual — English and Hebrew (עברית) with RTL layout, translated word lists and questions
 - 🎭 3–12 players with editable names, 1–3 imposters
 - 🔤 **Word Game** — find who doesn't know the secret word
 - ❓ **Question Game** — everyone answers their question aloud, but one player unknowingly got a different question
@@ -47,11 +48,14 @@ python3 -m http.server
 ## Project structure
 
 ```
-index.html       All screens (home, settings, categories, players, reveal, discussion, vote, result)
-css/style.css    Dark party-game theme, mobile-first
-js/words.js      Word lists: 24 categories × easy/medium/hard
-js/questions.js  Question pairs for the Question Game
-js/app.js        Game state, role dealing, timer, voting, scoring
+index.html          All screens (home, settings, categories, players, reveal, discussion, vote, result)
+css/style.css       Dark party-game theme, mobile-first, RTL-aware
+js/i18n.js          UI strings (English + Hebrew)
+js/words.js         English word lists: 24 categories × easy/medium/hard
+js/words-he.js      Hebrew word lists, same structure
+js/questions.js     English question pairs for the Question Game
+js/questions-he.js  Hebrew question pairs
+js/app.js           Game state, role dealing, timer, voting, scoring, i18n
 ```
 
 ## The original app

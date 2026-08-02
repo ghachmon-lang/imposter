@@ -6,6 +6,7 @@
   const ALL_KEYS = Object.keys(WORDS);
 
   const settings = {
+    lang: (navigator.language || "").toLowerCase().startsWith("he") ? "he" : "en",
     playerCount: 4,
     names: [],
     imposterCount: 1,
@@ -28,6 +29,7 @@
     viewed: [],          // booleans per player
     current: -1,         // player index on the reveal screen
     revealed: false,
+    discussionStarted: false,
     starter: 0,
     clockwise: true,
   };
@@ -43,6 +45,35 @@
   let wakeLock = null;
 
   const $ = (id) => document.getElementById(id);
+
+  // ---------- i18n ----------
+
+  function t(key) {
+    return (I18N[settings.lang] && I18N[settings.lang][key]) || I18N.en[key] || key;
+  }
+
+  function fmt(key, vars) {
+    return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && k in vars ? vars[k] : ""));
+  }
+
+  function langWords() {
+    return settings.lang === "he" ? WORDS_HE : WORDS;
+  }
+
+  function langQuestions() {
+    return settings.lang === "he" ? QUESTIONS_HE : QUESTIONS;
+  }
+
+  function applyI18n() {
+    document.documentElement.lang = settings.lang;
+    document.documentElement.dir = settings.lang === "he" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+      el.innerHTML = t(el.dataset.i18nHtml);
+    });
+  }
 
   // ---------- helpers ----------
 
@@ -60,7 +91,7 @@
 
   function playerName(i) {
     const raw = (settings.names[i] || "").trim();
-    return raw || `Player ${i + 1}`;
+    return raw || fmt("playerDefault", { n: i + 1 });
   }
 
   function initial(i) {
@@ -96,6 +127,7 @@
         }
       }
       if (!saved) return;
+      if (saved.lang === "en" || saved.lang === "he") settings.lang = saved.lang;
       if (typeof saved.playerCount === "number") settings.playerCount = Math.min(12, Math.max(3, saved.playerCount));
       if (Array.isArray(saved.names)) settings.names = saved.names.map(String);
       if (typeof saved.imposterCount === "number") settings.imposterCount = saved.imposterCount;
@@ -157,9 +189,9 @@
   // ---------- game settings screen ----------
 
   function categorySummary() {
-    if (settings.categories.length === 0) return "No categories selected";
-    if (settings.categories.length === ALL_KEYS.length) return "All categories";
-    const labels = settings.categories.map((k) => WORDS[k].label);
+    if (settings.categories.length === 0) return t("noCategories");
+    if (settings.categories.length === ALL_KEYS.length) return t("allCategories");
+    const labels = settings.categories.map((k) => langWords()[k].label);
     if (labels.length <= 3) return labels.join(", ");
     return `${labels.slice(0, 3).join(", ")} +${labels.length - 3}`;
   }
@@ -188,7 +220,8 @@
       const input = document.createElement("input");
       input.type = "text";
       input.maxLength = 14;
-      input.placeholder = `Player ${i + 1}`;
+      input.dir = "auto";
+      input.placeholder = fmt("playerDefault", { n: i + 1 });
       input.value = settings.names[i] || "";
       input.autocomplete = "off";
       input.addEventListener("input", () => {
@@ -212,7 +245,7 @@
 
   function updateSelectToggle() {
     $("btn-select-toggle").textContent =
-      settings.categories.length > 0 ? "Deselect all" : "Select all";
+      settings.categories.length > 0 ? t("deselectAll") : t("selectAll");
   }
 
   function renderCategories() {
@@ -220,7 +253,7 @@
     const grid = $("cat-grid");
     grid.innerHTML = "";
     for (const key of ALL_KEYS) {
-      const cat = WORDS[key];
+      const cat = langWords()[key];
       const count = cat.easy.length + cat.medium.length + cat.hard.length;
       const card = document.createElement("button");
       card.className = "cat-card";
@@ -229,7 +262,7 @@
       card.innerHTML =
         `<span class="cat-check"><svg><use href="#i-check"/></svg></span>` +
         `<span class="cat-name">${cat.emoji} ${esc(cat.label)}</span>` +
-        `<span class="cat-count">${count} words</span>`;
+        `<span class="cat-count">${esc(fmt("wordCount", { n: count }))}</span>`;
       card.addEventListener("click", () => {
         const i = settings.categories.indexOf(key);
         if (i >= 0) {
@@ -256,7 +289,7 @@
 
   function pickWord() {
     const entries = settings.categories.flatMap((key) =>
-      difficultyPool(WORDS[key]).map((word) => ({ key, word }))
+      difficultyPool(langWords()[key]).map((word) => ({ key, word }))
     );
     let fresh = entries.filter((e) => !usedWords.has(e.word));
     if (fresh.length === 0) {
@@ -271,10 +304,11 @@
   }
 
   function pickQuestions() {
-    let fresh = QUESTIONS.filter((pair) => !usedQuestions.has(pair[0]));
+    const all = langQuestions();
+    let fresh = all.filter((pair) => !usedQuestions.has(pair[0]));
     if (fresh.length === 0) {
-      usedQuestions.clear();
-      fresh = QUESTIONS;
+      all.forEach((pair) => usedQuestions.delete(pair[0]));
+      fresh = all;
     }
     const pair = sample(fresh);
     usedQuestions.add(pair[0]);
@@ -319,9 +353,7 @@
     acquireWakeLock();
     renderPlayers();
     $("players-sub").textContent =
-      round.mode === "word"
-        ? "Tap your name to reveal your word, then pass the device to the next player."
-        : "Tap your name to reveal your question, then pass the device to the next player.";
+      round.mode === "word" ? t("playersSubWord") : t("playersSubQuestion");
     show("screen-players");
   }
 
@@ -384,15 +416,15 @@
     $("word-player-name").textContent = playerName(i);
 
     if (round.mode === "word") {
-      $("word-for-label").textContent = "The word for";
-      const cat = WORDS[round.categoryKey];
+      $("word-for-label").textContent = t("wordFor");
+      const cat = langWords()[round.categoryKey];
       $("word-category").textContent =
         isImposter && !settings.showHint
-          ? "Category: ???"
-          : `Category: ${cat.label}`;
+          ? t("categoryUnknown")
+          : fmt("category", { label: cat.label });
       $("word-category").classList.remove("hidden");
     } else {
-      $("word-for-label").textContent = "The question for";
+      $("word-for-label").textContent = t("questionFor");
       $("word-category").classList.add("hidden");
     }
 
@@ -416,9 +448,9 @@
     if (round.mode === "word") {
       text.classList.remove("question-text");
       if (isImposter) {
-        text.textContent = "You're the Imposter!";
+        text.textContent = t("imposterTitle");
         text.classList.add("imposter-text");
-        note.textContent = "You don't know the word — listen closely and blend in.";
+        note.textContent = t("imposterNote");
         note.classList.remove("hidden");
       } else {
         text.textContent = round.word;
@@ -431,7 +463,7 @@
       text.classList.add("question-text");
       text.classList.remove("imposter-text");
       text.textContent = isImposter ? round.imposterQuestion : round.question;
-      note.textContent = "Remember it — you'll answer out loud.";
+      note.textContent = t("questionNote");
       note.classList.remove("hidden");
     }
 
@@ -469,13 +501,13 @@
   function pauseTimer() {
     stopTimer();
     if (timerRemaining > 0 && timerRemaining < settings.timerSeconds) {
-      $("btn-timer-toggle").textContent = "Resume Timer";
+      $("btn-timer-toggle").textContent = t("resumeTimer");
     }
   }
 
   function updateTimerDisplay() {
     const display = $("timer-display");
-    display.textContent = timerRemaining > 0 ? formatTime(timerRemaining) : "Time's up!";
+    display.textContent = timerRemaining > 0 ? formatTime(timerRemaining) : t("timesUp");
     display.classList.toggle("timer-low", timerRemaining > 0 && timerRemaining <= 10);
   }
 
@@ -485,13 +517,13 @@
       pauseTimer();
       return;
     }
-    $("btn-timer-toggle").textContent = "Pause Timer";
+    $("btn-timer-toggle").textContent = t("pauseTimer");
     timerId = setInterval(() => {
       timerRemaining -= 1;
       updateTimerDisplay();
       if (timerRemaining <= 0) {
         stopTimer();
-        $("btn-timer-toggle").textContent = "Time's Up";
+        $("btn-timer-toggle").textContent = t("timesUpBtn");
         try { navigator.vibrate?.([300, 120, 300]); } catch (e) { /* unsupported */ }
       }
     }, 1000);
@@ -500,23 +532,23 @@
   function startDiscussion() {
     $("starter-avatar").textContent = initial(round.starter);
     $("starter-name").textContent = playerName(round.starter);
-    $("starter-direction").textContent = round.clockwise
-      ? "then continue clockwise ↻"
-      : "then continue counter-clockwise ↺";
+    $("starter-direction").textContent =
+      round.clockwise ? t("clockwise") : t("counterClockwise");
 
     if (round.mode === "word") {
-      $("discussion-sub").textContent = "One clue word each, then debate. When you're ready, take the vote.";
-      $("starter-label").textContent = "First clue";
-      $("btn-review-words").textContent = "Forgot your word? Review";
+      $("discussion-sub").textContent = t("discussionSubWord");
+      $("starter-label").textContent = t("firstClue");
+      $("btn-review-words").textContent = t("reviewWord");
       const showCat = settings.showHint;
       $("discussion-category").classList.toggle("hidden", !showCat);
       if (showCat) {
-        $("discussion-category").textContent = `Category: ${WORDS[round.categoryKey].label}`;
+        $("discussion-category").textContent =
+          fmt("category", { label: langWords()[round.categoryKey].label });
       }
     } else {
-      $("discussion-sub").textContent = "Everyone answers their own question out loud. One answer won't quite fit…";
-      $("starter-label").textContent = "First answer";
-      $("btn-review-words").textContent = "Forgot your question? Review";
+      $("discussion-sub").textContent = t("discussionSubQuestion");
+      $("starter-label").textContent = t("firstAnswer");
+      $("btn-review-words").textContent = t("reviewQuestion");
       $("discussion-category").classList.add("hidden");
     }
 
@@ -527,9 +559,9 @@
       // First visit this round — arm the timer fresh. Coming back from a
       // word review keeps whatever time was left.
       timerRemaining = settings.timerSeconds;
-      if (hasTimer) $("btn-timer-toggle").textContent = "Start Timer";
+      if (hasTimer) $("btn-timer-toggle").textContent = t("startTimer");
     } else if (hasTimer && timerRemaining > 0 && timerRemaining < settings.timerSeconds) {
-      $("btn-timer-toggle").textContent = "Resume Timer";
+      $("btn-timer-toggle").textContent = t("resumeTimer");
     }
     round.discussionStarted = true;
     if (hasTimer) updateTimerDisplay();
@@ -541,7 +573,7 @@
   function renderVote() {
     accused = -1;
     $("vote-title").textContent =
-      round.mode === "word" ? "Who is the imposter?" : "Who got a different question?";
+      round.mode === "word" ? t("voteTitleWord") : t("voteTitleQuestion");
     $("btn-confirm-vote").classList.add("hidden");
     const grid = $("vote-grid");
     grid.innerHTML = "";
@@ -583,51 +615,56 @@
 
     if (accusedIndex === null) {
       emoji.textContent = "🃏";
-      title.textContent = "The Reveal";
-      sub.textContent = "No official vote this round.";
+      title.textContent = t("resultReveal");
+      sub.textContent = t("noOfficialVote");
       steal.classList.add("hidden");
     } else if (round.imposters.includes(accusedIndex)) {
       scores.crew += 1;
       emoji.textContent = "🎉";
-      title.textContent = "Imposter Caught!";
+      title.textContent = t("imposterCaught");
       title.classList.add("win");
-      sub.textContent = `${playerName(accusedIndex)} ${isWord ? `was ${plural ? "an" : "the"} imposter` : "got a different question"}.`;
+      const name = playerName(accusedIndex);
+      sub.textContent = isWord
+        ? fmt(plural ? "caughtSubWordMany" : "caughtSubWordOne", { name })
+        : fmt("caughtSubQuestion", { name });
       if (isWord) {
         steal.classList.remove("hidden");
-        steal.textContent = `🎭 Last chance: if ${playerName(accusedIndex)} can guess the secret word out loud right now, the imposter${plural ? "s" : ""} steal${plural ? "" : "s"} the win!`;
+        steal.textContent = fmt(plural ? "stealNoteMany" : "stealNoteOne", { name });
       } else {
         steal.classList.add("hidden");
       }
     } else {
       scores.imposters += 1;
       emoji.textContent = "😈";
-      title.textContent = plural ? "The Imposters Win!" : "The Imposter Wins!";
+      title.textContent = plural ? t("imposterWinsMany") : t("imposterWinsOne");
       title.classList.add("lose");
-      sub.textContent = `${playerName(accusedIndex)} ${isWord ? "was innocent" : "had the same question as everyone else"}.`;
+      const name = playerName(accusedIndex);
+      sub.textContent = isWord
+        ? fmt("innocentSubWord", { name })
+        : fmt("innocentSubQuestion", { name });
       steal.classList.add("hidden");
     }
 
     const wordEl = $("result-word");
     if (isWord) {
-      const cat = WORDS[round.categoryKey];
-      $("result-word-label").textContent = "The secret word was";
+      const cat = langWords()[round.categoryKey];
+      $("result-word-label").textContent = t("secretWordWas");
       wordEl.textContent = round.word;
       wordEl.classList.remove("question-word");
       $("result-imposter-q").classList.add("hidden");
       $("result-imposters").innerHTML =
-        `${cat.emoji} ${esc(cat.label)} · ${plural ? "Imposters" : "Imposter"}: <strong>${namesText}</strong>`;
+        `${cat.emoji} ${esc(cat.label)} · ${plural ? t("impostersLabel") : t("imposterLabel")}: <strong>${namesText}</strong>`;
     } else {
-      $("result-word-label").textContent = "The group's question was";
+      $("result-word-label").textContent = t("groupQuestionWas");
       wordEl.textContent = round.question;
       wordEl.classList.add("question-word");
       $("result-imposter-q").classList.remove("hidden");
       $("result-imposter-q-text").textContent = round.imposterQuestion;
       $("result-imposters").innerHTML =
-        `Different question: <strong>${namesText}</strong>`;
+        `${esc(t("differentQuestion"))} <strong>${namesText}</strong>`;
     }
 
-    $("scoreboard").textContent =
-      `Score — Crew ${scores.crew} · Imposters ${scores.imposters}`;
+    $("scoreboard").textContent = fmt("score", { c: scores.crew, i: scores.imposters });
 
     show("screen-result");
   }
@@ -635,6 +672,13 @@
   // ---------- wiring ----------
 
   function bind() {
+    $("btn-lang").addEventListener("click", () => {
+      settings.lang = settings.lang === "he" ? "en" : "he";
+      saveSettings();
+      applyI18n();
+      renderSetup();
+    });
+
     $("btn-new-game").addEventListener("click", () => {
       renderSetup();
       show("screen-setup");
@@ -762,6 +806,7 @@
   }
 
   loadSettings();
+  applyI18n();
   renderSetup();
   bind();
 

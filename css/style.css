@@ -59,7 +59,7 @@ body {
 
 .icon-btn {
   width: 44px; height: 44px;
-  margin-left: -10px;
+  margin-inline-start: -10px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none; color: var(--text); cursor: pointer;
 }
@@ -139,7 +139,7 @@ body {
 
 .help-card { display: flex; flex-direction: column; gap: 14px; }
 .help-mode { font-size: 1.15rem; font-weight: 800; }
-.help-list { padding-left: 20px; display: flex; flex-direction: column; gap: 14px; line-height: 1.5; }
+.help-list { padding-inline-start: 20px; display: flex; flex-direction: column; gap: 14px; line-height: 1.5; }
 .help-tip {
   margin-top: 18px; padding: 12px;
   background: var(--purple-soft);
@@ -212,7 +212,7 @@ body {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font: inherit; color: var(--text);
   background: none; border: none; padding: 4px 0; cursor: pointer;
-  text-align: left;
+  text-align: start;
 }
 .cat-summary { font-size: 1.2rem; font-weight: 700; }
 .chev-chip {
@@ -285,7 +285,7 @@ body {
 
 .cat-card {
   position: relative;
-  font: inherit; text-align: left; color: var(--text);
+  font: inherit; text-align: start; color: var(--text);
   background: var(--bg-card);
   border: 1.5px solid rgba(217, 180, 100, 0.35);
   border-radius: var(--radius);
@@ -307,7 +307,7 @@ body {
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
 }
 .cat-check {
-  position: absolute; top: 12px; right: 12px;
+  position: absolute; top: 12px; inset-inline-end: 12px;
   width: 26px; height: 26px; border-radius: 50%;
   background: var(--purple-deep);
   display: none; align-items: center; justify-content: center;
@@ -373,7 +373,7 @@ body {
   animation: fade-in 0.2s ease;
 }
 .viewed-badge {
-  position: absolute; top: 10px; right: 10px;
+  position: absolute; top: 10px; inset-inline-end: 10px;
   width: 28px; height: 28px; border-radius: 50%;
   background: var(--purple-deep);
   display: flex; align-items: center; justify-content: center;
@@ -433,7 +433,7 @@ body {
 
 /* ---------- discussion ---------- */
 
-.starter-card { display: flex; align-items: center; gap: 16px; text-align: left; padding: 18px; }
+.starter-card { display: flex; align-items: center; gap: 16px; text-align: start; padding: 18px; }
 .starter-card .avatar { width: 64px; height: 64px; font-size: 1.7rem; }
 .starter-label { color: var(--dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .starter-name { font-size: 1.5rem; font-weight: 800; margin-top: 2px; }
@@ -495,4 +495,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .screen, .word-content { animation: none; }
   .timer-display.timer-low { animation: none; }
+}
+
+/* ---------- RTL ---------- */
+
+[dir="rtl"] .icon-btn svg,
+[dir="rtl"] .chev-chip svg { transform: scaleX(-1); }
+
+#screen-home { position: relative; }
+.home-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between;
 }

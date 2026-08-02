@@ -36,16 +36,20 @@
 
     <!-- HOME -->
     <section class="screen active" id="screen-home">
+      <header class="topbar home-topbar">
+        <span></span>
+        <button class="text-btn" id="btn-lang" data-i18n="langToggle">עברית</button>
+      </header>
       <div class="home-hero">
         <div class="home-mask">🎭</div>
-        <h1 class="home-title">Imposter</h1>
-        <p class="home-tagline">Everyone knows the secret word.<br>Except one of you.</p>
+        <h1 class="home-title" data-i18n="appTitle">Imposter</h1>
+        <p class="home-tagline" data-i18n-html="tagline">Everyone knows the secret word.<br>Except one of you.</p>
       </div>
       <div class="stack">
-        <button class="btn btn-primary" id="btn-new-game">New Game</button>
-        <button class="btn btn-ghost" id="btn-how-to">How to Play</button>
+        <button class="btn btn-primary" id="btn-new-game" data-i18n="newGame">New Game</button>
+        <button class="btn btn-ghost" id="btn-how-to" data-i18n="howToPlay">How to Play</button>
       </div>
-      <p class="home-foot">Pass &amp; play · works offline · 3–12 players</p>
+      <p class="home-foot" data-i18n="homeFoot">Pass &amp; play · works offline · 3–12 players</p>
     </section>
 
     <!-- HOW TO PLAY -->
@@ -53,23 +57,13 @@
       <header class="topbar">
         <button class="icon-btn" data-back="screen-home" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
       </header>
-      <h1 class="page-title">How to Play</h1>
+      <h1 class="page-title" data-i18n="helpTitle">How to Play</h1>
       <div class="card help-card">
-        <p class="help-mode">🔤 Word Game</p>
-        <ol class="help-list">
-          <li><strong>Deal the roles.</strong> Each player taps their name and secretly reveals their word — everyone gets the secret word, except the imposter.</li>
-          <li><strong>Give clues.</strong> Going around the circle, each player says <em>one word</em> related to the secret word. The imposter has to improvise and blend in.</li>
-          <li><strong>Discuss.</strong> Too vague? Too obvious? Debate who doesn't seem to know the word.</li>
-          <li><strong>Vote.</strong> Pick a suspect together and confirm the group's accusation.</li>
-          <li><strong>Reveal.</strong> If the imposter is caught, they get one chance to guess the secret word and steal the win. If an innocent player is accused, the imposter wins.</li>
-        </ol>
-        <p class="help-mode">❓ Question Game</p>
-        <ol class="help-list">
-          <li>Everyone secretly reads their question — but one player, without knowing it, gets a <em>different</em> question.</li>
-          <li>Going around the circle, everyone answers their own question out loud.</li>
-          <li>One answer won't quite fit. Discuss, vote, and find who got the different question!</li>
-        </ol>
-        <p class="help-tip">💡 Tip: clues that are too specific hand the word to the imposter — clues that are too vague make <em>you</em> look like the imposter.</p>
+        <p class="help-mode" data-i18n="helpWordTitle">🔤 Word Game</p>
+        <ol class="help-list" data-i18n-html="helpWordList"></ol>
+        <p class="help-mode" data-i18n="helpQuestionTitle">❓ Question Game</p>
+        <ol class="help-list" data-i18n-html="helpQuestionList"></ol>
+        <p class="help-tip" data-i18n-html="helpTip"></p>
       </div>
     </section>
 
@@ -78,12 +72,12 @@
       <header class="topbar">
         <button class="icon-btn" data-back="screen-home" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
       </header>
-      <h1 class="page-title">Game Settings</h1>
+      <h1 class="page-title" data-i18n="settingsTitle">Game Settings</h1>
 
       <div class="stat-row">
         <div class="stat-card">
           <span class="stat-icon"><svg><use href="#i-users"/></svg></span>
-          <p class="stat-label">How many players?</p>
+          <p class="stat-label" data-i18n="howManyPlayers">How many players?</p>
           <div class="stat-stepper">
             <button class="stepper-btn" id="players-minus" aria-label="Fewer players">−</button>
             <span class="stat-value" id="players-count">4</span>
@@ -92,7 +86,7 @@
         </div>
         <div class="stat-card">
           <span class="stat-icon"><svg><use href="#i-spy"/></svg></span>
-          <p class="stat-label">How many imposters?</p>
+          <p class="stat-label" data-i18n="howManyImposters">How many imposters?</p>
           <div class="stat-stepper">
             <button class="stepper-btn" id="imposters-minus" aria-label="Fewer imposters">−</button>
             <span class="stat-value" id="imposters-count">1</span>
@@ -101,30 +95,30 @@
         </div>
       </div>
 
-      <h2 class="section-head"><svg><use href="#i-gamepad"/></svg>Game Mode</h2>
+      <h2 class="section-head"><svg><use href="#i-gamepad"/></svg><span data-i18n="gameMode">Game Mode</span></h2>
       <div class="mode-row">
         <button class="mode-card" id="mode-word" data-mode="word">
           <svg class="mode-icon"><use href="#i-letters"/></svg>
-          <p class="mode-name">Word Game</p>
-          <p class="mode-desc">Find who doesn't know the secret word</p>
+          <p class="mode-name" data-i18n="wordGame">Word Game</p>
+          <p class="mode-desc" data-i18n="wordGameDesc">Find who doesn't know the secret word</p>
         </button>
         <button class="mode-card" id="mode-question" data-mode="question">
           <svg class="mode-icon"><use href="#i-question"/></svg>
-          <p class="mode-name">Question Game</p>
-          <p class="mode-desc">Find who got a different question</p>
+          <p class="mode-name" data-i18n="questionGame">Question Game</p>
+          <p class="mode-desc" data-i18n="questionGameDesc">Find who got a different question</p>
         </button>
       </div>
 
       <div class="card">
         <label class="row-between toggle-row">
-          <span class="toggle-label"><svg class="row-icon"><use href="#i-spy"/></svg>Imposter Can Go First</span>
+          <span class="toggle-label"><svg class="row-icon"><use href="#i-spy"/></svg><span data-i18n="imposterFirst">Imposter Can Go First</span></span>
           <input type="checkbox" id="first-toggle" class="toggle" checked>
         </label>
-        <p class="card-hint">When off, the first clue or answer never comes from the imposter.</p>
+        <p class="card-hint" data-i18n="imposterFirstHint">When off, the first clue or answer never comes from the imposter.</p>
       </div>
 
       <div id="word-only-settings" class="sub-stack">
-        <h2 class="section-head"><svg><use href="#i-shapes"/></svg>Categories</h2>
+        <h2 class="section-head"><svg><use href="#i-shapes"/></svg><span data-i18n="categories">Categories</span></h2>
         <div class="card categories-card">
           <button class="cat-summary-row" id="btn-open-categories">
             <span class="cat-summary" id="cat-summary">All categories</span>
@@ -132,34 +126,34 @@
           </button>
           <div class="divider"></div>
           <label class="row-between toggle-row">
-            <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg>Show Category to Imposter</span>
+            <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg><span data-i18n="showCategory">Show Category to Imposter</span></span>
             <input type="checkbox" id="hint-toggle" class="toggle" checked>
           </label>
         </div>
 
-        <h2 class="section-head"><svg><use href="#i-dial"/></svg>Difficulty</h2>
+        <h2 class="section-head"><svg><use href="#i-dial"/></svg><span data-i18n="difficulty">Difficulty</span></h2>
         <div class="chips" id="difficulty-chips">
-          <button class="chip" data-difficulty="easy">Easy</button>
-          <button class="chip" data-difficulty="medium">Medium</button>
-          <button class="chip" data-difficulty="hard">Hard</button>
-          <button class="chip chip-selected" data-difficulty="mixed">Mixed</button>
+          <button class="chip" data-difficulty="easy" data-i18n="diffEasy">Easy</button>
+          <button class="chip" data-difficulty="medium" data-i18n="diffMedium">Medium</button>
+          <button class="chip" data-difficulty="hard" data-i18n="diffHard">Hard</button>
+          <button class="chip chip-selected" data-difficulty="mixed" data-i18n="diffMixed">Mixed</button>
         </div>
       </div>
 
-      <h2 class="section-head"><svg><use href="#i-clock"/></svg>Discussion Timer</h2>
+      <h2 class="section-head"><svg><use href="#i-clock"/></svg><span data-i18n="discussionTimer">Discussion Timer</span></h2>
       <div class="chips" id="timer-chips">
-        <button class="chip" data-timer="0">Off</button>
-        <button class="chip" data-timer="60">1 min</button>
-        <button class="chip chip-selected" data-timer="120">2 min</button>
-        <button class="chip" data-timer="180">3 min</button>
-        <button class="chip" data-timer="300">5 min</button>
+        <button class="chip" data-timer="0" data-i18n="timerOff">Off</button>
+        <button class="chip" data-timer="60" data-i18n="timer1">1 min</button>
+        <button class="chip chip-selected" data-timer="120" data-i18n="timer2">2 min</button>
+        <button class="chip" data-timer="180" data-i18n="timer3">3 min</button>
+        <button class="chip" data-timer="300" data-i18n="timer5">5 min</button>
       </div>
 
-      <h2 class="section-head"><svg><use href="#i-users"/></svg>Player Names</h2>
+      <h2 class="section-head"><svg><use href="#i-users"/></svg><span data-i18n="playerNames">Player Names</span></h2>
       <div id="player-names" class="player-names"></div>
 
       <div class="bottom-space"></div>
-      <button class="btn btn-primary" id="btn-start">Start Game</button>
+      <button class="btn btn-primary" id="btn-start" data-i18n="startGame">Start Game</button>
     </section>
 
     <!-- CATEGORY SELECTION -->
@@ -168,7 +162,7 @@
         <button class="icon-btn" data-back="screen-setup" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
         <button class="text-btn" id="btn-select-toggle">Deselect all</button>
       </header>
-      <h1 class="page-title">Category Selection</h1>
+      <h1 class="page-title" data-i18n="categorySelection">Category Selection</h1>
       <div class="cat-grid" id="cat-grid"></div>
     </section>
 
@@ -176,13 +170,13 @@
     <section class="screen" id="screen-players">
       <header class="topbar">
         <button class="icon-btn" id="btn-end-round" aria-label="End round"><svg><use href="#i-chevron-left"/></svg></button>
-        <span class="end-hint hidden" id="end-hint">Tap again to end the round</span>
+        <span class="end-hint hidden" id="end-hint" data-i18n="endHint">Tap again to end the round</span>
       </header>
-      <h1 class="page-title">Players</h1>
+      <h1 class="page-title" data-i18n="players">Players</h1>
       <p class="page-sub" id="players-sub">Tap your name to reveal your word, then pass the device to the next player.</p>
       <div class="player-grid" id="player-grid"></div>
       <div class="bottom-space"></div>
-      <button class="btn btn-primary hidden" id="btn-to-discussion">Start Discussion</button>
+      <button class="btn btn-primary hidden" id="btn-to-discussion" data-i18n="startDiscussion">Start Discussion</button>
     </section>
 
     <!-- WORD / QUESTION REVEAL -->
@@ -200,8 +194,8 @@
             <p class="word-note hidden" id="word-note"></p>
           </div>
         </button>
-        <p class="tap-hint" id="tap-hint">👆 Tap the box to reveal</p>
-        <button class="btn btn-primary hidden" id="btn-got-it">Got it!</button>
+        <p class="tap-hint" id="tap-hint" data-i18n="tapToReveal">👆 Tap the box to reveal</p>
+        <button class="btn btn-primary hidden" id="btn-got-it" data-i18n="gotIt">Got it!</button>
       </div>
     </section>
 
@@ -210,7 +204,7 @@
       <header class="topbar">
         <button class="icon-btn" id="btn-discussion-back" aria-label="Back to players"><svg><use href="#i-chevron-left"/></svg></button>
       </header>
-      <h1 class="page-title">Discussion</h1>
+      <h1 class="page-title" data-i18n="discussion">Discussion</h1>
       <p class="page-sub" id="discussion-sub">One clue word each, then debate. When you're ready, take the vote.</p>
       <p class="discussion-category hidden" id="discussion-category"></p>
       <div class="card starter-card">
@@ -227,7 +221,7 @@
       </div>
       <div class="bottom-space"></div>
       <div class="stack">
-        <button class="btn btn-primary" id="btn-to-vote">Go to Vote</button>
+        <button class="btn btn-primary" id="btn-to-vote" data-i18n="goToVote">Go to Vote</button>
         <button class="btn btn-ghost" id="btn-review-words">Forgot your word? Review</button>
       </div>
     </section>
@@ -238,12 +232,12 @@
         <button class="icon-btn" id="btn-vote-back" aria-label="Back to discussion"><svg><use href="#i-chevron-left"/></svg></button>
       </header>
       <h1 class="page-title" id="vote-title">Who is the imposter?</h1>
-      <p class="page-sub">Agree on a suspect, tap their name, then confirm the accusation.</p>
+      <p class="page-sub" data-i18n="voteSub">Agree on a suspect, tap their name, then confirm the accusation.</p>
       <div class="player-grid" id="vote-grid"></div>
       <div class="bottom-space"></div>
       <div class="stack">
-        <button class="btn btn-primary hidden" id="btn-confirm-vote">Confirm Accusation</button>
-        <button class="btn btn-ghost" id="btn-no-vote">Skip vote — just reveal</button>
+        <button class="btn btn-primary hidden" id="btn-confirm-vote" data-i18n="confirmVote">Confirm Accusation</button>
+        <button class="btn btn-ghost" id="btn-no-vote" data-i18n="skipVote">Skip vote — just reveal</button>
       </div>
     </section>
 
@@ -257,7 +251,7 @@
           <p class="reveal-word-label" id="result-word-label">The secret word was</p>
           <p class="reveal-word" id="result-word"></p>
           <div id="result-imposter-q" class="hidden">
-            <p class="reveal-word-label imposter-q-label">The imposter's question was</p>
+            <p class="reveal-word-label imposter-q-label" data-i18n="imposterQuestionWas">The imposter's question was</p>
             <p class="reveal-word imposter-q" id="result-imposter-q-text"></p>
           </div>
           <p class="result-imposters" id="result-imposters"></p>
@@ -265,15 +259,18 @@
         <p class="steal-note" id="steal-note"></p>
         <p class="scoreboard" id="scoreboard"></p>
         <div class="stack">
-          <button class="btn btn-primary" id="btn-play-again">Play Again</button>
-          <button class="btn btn-ghost" id="btn-change-setup">Change Setup</button>
+          <button class="btn btn-primary" id="btn-play-again" data-i18n="playAgain">Play Again</button>
+          <button class="btn btn-ghost" id="btn-change-setup" data-i18n="changeSetup">Change Setup</button>
         </div>
       </div>
     </section>
 
   </main>
+  <script src="js/i18n.js"></script>
   <script src="js/words.js"></script>
+  <script src="js/words-he.js"></script>
   <script src="js/questions.js"></script>
+  <script src="js/questions-he.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

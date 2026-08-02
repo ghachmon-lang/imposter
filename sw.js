@@ -1,12 +1,15 @@
 // Offline cache for Imposter. Stale-while-revalidate: serve from cache
 // instantly, refresh the cache in the background.
-const CACHE = "imposter-v1";
+const CACHE = "imposter-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
+  "./js/i18n.js",
   "./js/words.js",
+  "./js/words-he.js",
   "./js/questions.js",
+  "./js/questions-he.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
