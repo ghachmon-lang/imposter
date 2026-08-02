@@ -1,0 +1,38 @@
+// Question pairs for the Question Game.
+// Each pair shares an answer space (a number, a food, a place...) so the odd
+// answer stands out only once everyone compares — the player with the
+// different question doesn't know they have it.
+const QUESTIONS = [
+  ["How many hours of sleep do you need?", "How many hours a day are you on your phone?"],
+  ["What's your favorite pizza topping?", "What's your favorite sandwich filling?"],
+  ["What's your favorite season?", "What's your favorite holiday?"],
+  ["How many countries have you visited?", "How many concerts have you been to?"],
+  ["What's your dream vacation destination?", "Where would you never want to live?"],
+  ["What's your favorite animal?", "What animal are you most afraid of?"],
+  ["What's your go-to karaoke song?", "What song always makes you cry?"],
+  ["What did you want to be when you grew up?", "What job could you never do?"],
+  ["What's your favorite movie snack?", "What's your guilty-pleasure food?"],
+  ["How many cousins do you have?", "How many phone contacts do you actually talk to?"],
+  ["What's the first app you open in the morning?", "What app wastes most of your time?"],
+  ["What's your favorite board game?", "What game are you unbeatable at?"],
+  ["Who's the funniest person in this room?", "Who in this room would survive a zombie apocalypse?"],
+  ["What's your comfort TV show?", "What show did everyone love but you couldn't get into?"],
+  ["What's your favorite ice cream flavor?", "What's your favorite kind of cake?"],
+  ["How old were you when you got your first phone?", "How old were you when you learned to ride a bike?"],
+  ["What's your favorite sport to watch?", "What sport would you be worst at?"],
+  ["What's the best pet to have?", "What pet would you never own?"],
+  ["What's your usual coffee order?", "What drink do you order at a restaurant?"],
+  ["What's your favorite day of the week?", "What's the worst day of the week?"],
+  ["What time do you usually go to bed?", "What time do you wake up on weekends?"],
+  ["What's your favorite fruit?", "What fruit do you dislike the most?"],
+  ["What's your dream car?", "What car would you never buy?"],
+  ["Who's your celebrity crush?", "Which celebrity would you want as a sibling?"],
+  ["What's the scariest movie you've ever seen?", "What's the most overrated movie ever?"],
+  ["How many pillows do you sleep with?", "How many alarms do you set in the morning?"],
+  ["What's your favorite color?", "What color looks worst on you?"],
+  ["What would you grab first if your house was on fire?", "What can't you leave home without?"],
+  ["What was your favorite school subject?", "What school subject did you struggle with most?"],
+  ["What country has the best food?", "What country would you move to tomorrow?"],
+  ["What's your favorite smell?", "What smell can you not stand?"],
+  ["What's the best age to be?", "What age scares you the most?"],
+];

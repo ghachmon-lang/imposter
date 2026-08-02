@@ -9,6 +9,7 @@
     playerCount: 4,
     names: [],
     imposterCount: 1,
+    mode: "word",
     categories: [...ALL_KEYS],
     difficulty: "mixed",
     showHint: true,
@@ -16,11 +17,15 @@
   };
 
   const round = {
+    active: false,
+    mode: "word",
     categoryKey: null,
-    word: null,
-    imposters: [],   // player indices
-    viewed: [],      // booleans per player
-    current: -1,     // player index on the word screen
+    word: null,          // word mode: the secret word
+    question: null,      // question mode: the group's question
+    imposterQuestion: null,
+    imposters: [],       // player indices
+    viewed: [],          // booleans per player
+    current: -1,         // player index on the reveal screen
     revealed: false,
     starter: 0,
     clockwise: true,
@@ -28,13 +33,23 @@
 
   const scores = { crew: 0, imposters: 0 };
   const usedWords = new Set();
+  const usedQuestions = new Set();
 
   let timerId = null;
   let timerRemaining = 0;
+  let accused = -1;
+  let endArmTimeout = null;
+  let wakeLock = null;
 
   const $ = (id) => document.getElementById(id);
 
   // ---------- helpers ----------
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
 
   function maxImposters(players) {
     if (players >= 9) return 3;
@@ -48,7 +63,9 @@
   }
 
   function initial(i) {
-    return playerName(i).trim().charAt(0).toUpperCase();
+    // [...str] keeps surrogate pairs (emoji) intact, unlike charAt.
+    const first = [...playerName(i)][0] || "?";
+    return first.toUpperCase();
   }
 
   function randomInt(n) {
@@ -81,6 +98,7 @@
       if (typeof saved.playerCount === "number") settings.playerCount = Math.min(12, Math.max(3, saved.playerCount));
       if (Array.isArray(saved.names)) settings.names = saved.names.map(String);
       if (typeof saved.imposterCount === "number") settings.imposterCount = saved.imposterCount;
+      if (saved.mode === "word" || saved.mode === "question") settings.mode = saved.mode;
       if (Array.isArray(saved.categories)) {
         settings.categories = saved.categories.filter((k) => WORDS[k]);
       }
@@ -91,12 +109,47 @@
     } catch (e) { /* corrupt storage — fall back to defaults */ }
   }
 
+  // ---------- screen wake lock (best effort) ----------
+
+  async function acquireWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock?.request("screen");
+    } catch (e) { /* unsupported or blocked — the game works without it */ }
+  }
+
+  function releaseWakeLock() {
+    try {
+      wakeLock?.release();
+    } catch (e) { /* ignore */ }
+    wakeLock = null;
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && round.active) acquireWakeLock();
+  });
+
   // ---------- navigation ----------
 
   function show(screenId) {
     document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
     $(screenId).classList.add("active");
     window.scrollTo(0, 0);
+  }
+
+  function disarmEndRound() {
+    if (endArmTimeout !== null) {
+      clearTimeout(endArmTimeout);
+      endArmTimeout = null;
+    }
+    $("end-hint").classList.add("hidden");
+  }
+
+  function endRound() {
+    round.active = false;
+    releaseWakeLock();
+    stopTimer();
+    renderSetup();
+    show("screen-setup");
   }
 
   // ---------- game settings screen ----------
@@ -120,8 +173,12 @@
     $("imposters-minus").disabled = settings.imposterCount <= 1;
     $("imposters-plus").disabled = settings.imposterCount >= cap;
 
+    $("mode-word").classList.toggle("mode-selected", settings.mode === "word");
+    $("mode-question").classList.toggle("mode-selected", settings.mode === "question");
+    $("word-only-settings").classList.toggle("hidden", settings.mode === "question");
+
     $("cat-summary").textContent = categorySummary();
-    $("btn-start").disabled = settings.categories.length === 0;
+    $("btn-start").disabled = settings.mode === "word" && settings.categories.length === 0;
 
     const namesWrap = $("player-names");
     namesWrap.innerHTML = "";
@@ -168,7 +225,7 @@
       card.classList.toggle("cat-selected", settings.categories.includes(key));
       card.innerHTML =
         `<span class="cat-check"><svg><use href="#i-check"/></svg></span>` +
-        `<span class="cat-name">${cat.emoji} ${cat.label}</span>` +
+        `<span class="cat-name">${cat.emoji} ${esc(cat.label)}</span>` +
         `<span class="cat-count">${count} words</span>`;
       card.addEventListener("click", () => {
         const i = settings.categories.indexOf(key);
@@ -210,6 +267,20 @@
     round.word = pick.word;
   }
 
+  function pickQuestions() {
+    let fresh = QUESTIONS.filter((pair) => !usedQuestions.has(pair[0]));
+    if (fresh.length === 0) {
+      usedQuestions.clear();
+      fresh = QUESTIONS;
+    }
+    const pair = sample(fresh);
+    usedQuestions.add(pair[0]);
+    // Randomly decide which question is the group's and which the imposter's.
+    const flip = Math.random() < 0.5;
+    round.question = flip ? pair[1] : pair[0];
+    round.imposterQuestion = flip ? pair[0] : pair[1];
+  }
+
   function assignRoles() {
     const indices = [...Array(settings.playerCount).keys()];
     // Fisher–Yates, take the first N as imposters.
@@ -221,38 +292,51 @@
   }
 
   function startRound() {
-    pickWord();
+    round.mode = settings.mode;
+    if (round.mode === "word") {
+      pickWord();
+    } else {
+      pickQuestions();
+    }
     assignRoles();
+    round.active = true;
     round.viewed = Array(settings.playerCount).fill(false);
     round.current = -1;
     round.revealed = false;
+    round.discussionStarted = false;
     round.starter = randomInt(settings.playerCount);
     round.clockwise = Math.random() < 0.5;
+    accused = -1;
+    acquireWakeLock();
     renderPlayers();
+    $("players-sub").textContent =
+      round.mode === "word"
+        ? "Tap your name to reveal your word, then pass the device to the next player."
+        : "Tap your name to reveal your question, then pass the device to the next player.";
     show("screen-players");
   }
 
   // ---------- players grid ----------
 
   function renderPlayers() {
+    disarmEndRound();
     const grid = $("player-grid");
     grid.innerHTML = "";
     for (let i = 0; i < settings.playerCount; i++) {
       const card = document.createElement("button");
       card.className = "player-card";
       card.classList.toggle("viewed", round.viewed[i]);
-      card.disabled = round.viewed[i];
       card.innerHTML =
         (round.viewed[i] ? `<span class="viewed-badge"><svg><use href="#i-check"/></svg></span>` : "") +
-        `<span class="avatar">${initial(i)}</span>` +
-        `<span class="p-name">${playerName(i)}</span>`;
-      card.addEventListener("click", () => openWord(i));
+        `<span class="avatar">${esc(initial(i))}</span>` +
+        `<span class="p-name">${esc(playerName(i))}</span>`;
+      card.addEventListener("click", () => openReveal(i));
       grid.appendChild(card);
     }
     $("btn-to-discussion").classList.toggle("hidden", !round.viewed.every(Boolean));
   }
 
-  // ---------- word reveal ----------
+  // ---------- word / question reveal ----------
 
   function drawConfetti() {
     const canvas = $("confetti-canvas");
@@ -277,17 +361,31 @@
     ctx.globalAlpha = 1;
   }
 
-  function openWord(i) {
+  window.addEventListener("resize", () => {
+    if ($("screen-word").classList.contains("active") && !round.revealed) {
+      drawConfetti();
+    }
+  });
+
+  function openReveal(i) {
     round.current = i;
     round.revealed = false;
 
     const isImposter = round.imposters.includes(i);
-    const cat = WORDS[round.categoryKey];
     $("word-player-name").textContent = playerName(i);
-    $("word-category").textContent =
-      isImposter && !settings.showHint
-        ? "Category: ???"
-        : `Category: ${cat.label}`;
+
+    if (round.mode === "word") {
+      $("word-for-label").textContent = "The word for";
+      const cat = WORDS[round.categoryKey];
+      $("word-category").textContent =
+        isImposter && !settings.showHint
+          ? "Category: ???"
+          : `Category: ${cat.label}`;
+      $("word-category").classList.remove("hidden");
+    } else {
+      $("word-for-label").textContent = "The question for";
+      $("word-category").classList.add("hidden");
+    }
 
     $("word-box").classList.remove("revealed");
     $("word-content").classList.add("hidden");
@@ -298,22 +396,34 @@
     requestAnimationFrame(drawConfetti);
   }
 
-  function revealWord() {
+  function reveal() {
     if (round.revealed) return;
     round.revealed = true;
 
     const isImposter = round.imposters.includes(round.current);
     const text = $("word-text");
     const note = $("word-note");
-    if (isImposter) {
-      text.textContent = "You're the Imposter!";
-      text.classList.add("imposter-text");
-      note.textContent = "You don't know the word — listen closely and blend in.";
-      note.classList.remove("hidden");
+
+    if (round.mode === "word") {
+      text.classList.remove("question-text");
+      if (isImposter) {
+        text.textContent = "You're the Imposter!";
+        text.classList.add("imposter-text");
+        note.textContent = "You don't know the word — listen closely and blend in.";
+        note.classList.remove("hidden");
+      } else {
+        text.textContent = round.word;
+        text.classList.remove("imposter-text");
+        note.classList.add("hidden");
+      }
     } else {
-      text.textContent = round.word;
+      // Question mode: nobody learns their role — the imposter just gets
+      // a different question and doesn't know it.
+      text.classList.add("question-text");
       text.classList.remove("imposter-text");
-      note.classList.add("hidden");
+      text.textContent = isImposter ? round.imposterQuestion : round.question;
+      note.textContent = "Remember it — you'll answer out loud.";
+      note.classList.remove("hidden");
     }
 
     $("word-box").classList.add("revealed");
@@ -322,7 +432,7 @@
     $("btn-got-it").classList.remove("hidden");
   }
 
-  function closeWord(markViewed) {
+  function closeReveal(markViewed) {
     if (markViewed || round.revealed) {
       round.viewed[round.current] = true;
     }
@@ -347,6 +457,13 @@
     }
   }
 
+  function pauseTimer() {
+    stopTimer();
+    if (timerRemaining > 0 && timerRemaining < settings.timerSeconds) {
+      $("btn-timer-toggle").textContent = "Resume Timer";
+    }
+  }
+
   function updateTimerDisplay() {
     const display = $("timer-display");
     display.textContent = timerRemaining > 0 ? formatTime(timerRemaining) : "Time's up!";
@@ -356,8 +473,7 @@
   function toggleTimer() {
     if (timerRemaining <= 0) return;
     if (timerId !== null) {
-      stopTimer();
-      $("btn-timer-toggle").textContent = "Resume Timer";
+      pauseTimer();
       return;
     }
     $("btn-timer-toggle").textContent = "Pause Timer";
@@ -367,6 +483,7 @@
       if (timerRemaining <= 0) {
         stopTimer();
         $("btn-timer-toggle").textContent = "Time's Up";
+        try { navigator.vibrate?.([300, 120, 300]); } catch (e) { /* unsupported */ }
       }
     }, 1000);
   }
@@ -378,29 +495,60 @@
       ? "then continue clockwise ↻"
       : "then continue counter-clockwise ↺";
 
+    if (round.mode === "word") {
+      $("discussion-sub").textContent = "One clue word each, then debate. When you're ready, take the vote.";
+      $("starter-label").textContent = "First clue";
+      $("btn-review-words").textContent = "Forgot your word? Review";
+      const showCat = settings.showHint;
+      $("discussion-category").classList.toggle("hidden", !showCat);
+      if (showCat) {
+        $("discussion-category").textContent = `Category: ${WORDS[round.categoryKey].label}`;
+      }
+    } else {
+      $("discussion-sub").textContent = "Everyone answers their own question out loud. One answer won't quite fit…";
+      $("starter-label").textContent = "First answer";
+      $("btn-review-words").textContent = "Forgot your question? Review";
+      $("discussion-category").classList.add("hidden");
+    }
+
     stopTimer();
-    timerRemaining = settings.timerSeconds;
     const hasTimer = settings.timerSeconds > 0;
     $("timer-block").classList.toggle("hidden", !hasTimer);
-    if (hasTimer) {
-      $("btn-timer-toggle").textContent = "Start Timer";
-      updateTimerDisplay();
+    if (!round.discussionStarted) {
+      // First visit this round — arm the timer fresh. Coming back from a
+      // word review keeps whatever time was left.
+      timerRemaining = settings.timerSeconds;
+      if (hasTimer) $("btn-timer-toggle").textContent = "Start Timer";
+    } else if (hasTimer && timerRemaining > 0 && timerRemaining < settings.timerSeconds) {
+      $("btn-timer-toggle").textContent = "Resume Timer";
     }
+    round.discussionStarted = true;
+    if (hasTimer) updateTimerDisplay();
     show("screen-discussion");
   }
 
   // ---------- vote & result ----------
 
   function renderVote() {
+    accused = -1;
+    $("vote-title").textContent =
+      round.mode === "word" ? "Who is the imposter?" : "Who got a different question?";
+    $("btn-confirm-vote").classList.add("hidden");
     const grid = $("vote-grid");
     grid.innerHTML = "";
     for (let i = 0; i < settings.playerCount; i++) {
       const card = document.createElement("button");
       card.className = "player-card";
       card.innerHTML =
-        `<span class="avatar">${initial(i)}</span>` +
-        `<span class="p-name">${playerName(i)}</span>`;
-      card.addEventListener("click", () => finishRound(i));
+        `<span class="avatar">${esc(initial(i))}</span>` +
+        `<span class="p-name">${esc(playerName(i))}</span>`;
+      card.addEventListener("click", () => {
+        accused = i;
+        grid.querySelectorAll(".player-card").forEach((c, j) => {
+          c.classList.toggle("vote-selected", j === i);
+        });
+        $("btn-confirm-vote").classList.remove("hidden");
+      });
       grid.appendChild(card);
     }
   }
@@ -410,11 +558,13 @@
   }
 
   function finishRound(accusedIndex) {
+    round.active = false;
+    releaseWakeLock();
     stopTimer();
-    const cat = WORDS[round.categoryKey];
     const names = imposterNames();
-    const namesText = names.join(" & ");
+    const namesText = names.map(esc).join(" & ");
     const plural = names.length > 1;
+    const isWord = round.mode === "word";
 
     const emoji = $("result-emoji");
     const title = $("result-title");
@@ -432,21 +582,41 @@
       emoji.textContent = "🎉";
       title.textContent = "Imposter Caught!";
       title.classList.add("win");
-      sub.textContent = `${playerName(accusedIndex)} was ${plural ? "an" : "the"} imposter.`;
-      steal.classList.remove("hidden");
-      steal.textContent = `🎭 Last chance: if ${playerName(accusedIndex)} can guess the secret word out loud right now, the imposter${plural ? "s" : ""} steal${plural ? "" : "s"} the win!`;
+      sub.textContent = `${playerName(accusedIndex)} ${isWord ? `was ${plural ? "an" : "the"} imposter` : "got a different question"}.`;
+      if (isWord) {
+        steal.classList.remove("hidden");
+        steal.textContent = `🎭 Last chance: if ${playerName(accusedIndex)} can guess the secret word out loud right now, the imposter${plural ? "s" : ""} steal${plural ? "" : "s"} the win!`;
+      } else {
+        steal.classList.add("hidden");
+      }
     } else {
       scores.imposters += 1;
       emoji.textContent = "😈";
       title.textContent = plural ? "The Imposters Win!" : "The Imposter Wins!";
       title.classList.add("lose");
-      sub.textContent = `${playerName(accusedIndex)} was innocent.`;
+      sub.textContent = `${playerName(accusedIndex)} ${isWord ? "was innocent" : "had the same question as everyone else"}.`;
       steal.classList.add("hidden");
     }
 
-    $("result-word").textContent = round.word;
-    $("result-imposters").innerHTML =
-      `${cat.emoji} ${cat.label} · ${plural ? "Imposters" : "Imposter"}: <strong>${namesText}</strong>`;
+    const wordEl = $("result-word");
+    if (isWord) {
+      const cat = WORDS[round.categoryKey];
+      $("result-word-label").textContent = "The secret word was";
+      wordEl.textContent = round.word;
+      wordEl.classList.remove("question-word");
+      $("result-imposter-q").classList.add("hidden");
+      $("result-imposters").innerHTML =
+        `${cat.emoji} ${esc(cat.label)} · ${plural ? "Imposters" : "Imposter"}: <strong>${namesText}</strong>`;
+    } else {
+      $("result-word-label").textContent = "The group's question was";
+      wordEl.textContent = round.question;
+      wordEl.classList.add("question-word");
+      $("result-imposter-q").classList.remove("hidden");
+      $("result-imposter-q-text").textContent = round.imposterQuestion;
+      $("result-imposters").innerHTML =
+        `Different question: <strong>${namesText}</strong>`;
+    }
+
     $("scoreboard").textContent =
       `Score — Crew ${scores.crew} · Imposters ${scores.imposters}`;
 
@@ -490,6 +660,17 @@
       renderSetup();
     });
 
+    $("mode-word").addEventListener("click", () => {
+      settings.mode = "word";
+      saveSettings();
+      renderSetup();
+    });
+    $("mode-question").addEventListener("click", () => {
+      settings.mode = "question";
+      saveSettings();
+      renderSetup();
+    });
+
     $("btn-open-categories").addEventListener("click", () => {
       renderCategories();
       show("screen-categories");
@@ -521,17 +702,42 @@
 
     $("btn-start").addEventListener("click", startRound);
 
-    $("word-box").addEventListener("click", revealWord);
-    $("btn-got-it").addEventListener("click", () => closeWord(true));
-    $("btn-word-back").addEventListener("click", () => closeWord(false));
+    // Ending a round mid-way needs a second tap to confirm.
+    $("btn-end-round").addEventListener("click", () => {
+      if (endArmTimeout !== null) {
+        disarmEndRound();
+        endRound();
+        return;
+      }
+      $("end-hint").classList.remove("hidden");
+      endArmTimeout = setTimeout(disarmEndRound, 2500);
+    });
+
+    $("word-box").addEventListener("click", reveal);
+    $("btn-got-it").addEventListener("click", () => closeReveal(true));
+    $("btn-word-back").addEventListener("click", () => closeReveal(false));
 
     $("btn-to-discussion").addEventListener("click", startDiscussion);
+    $("btn-discussion-back").addEventListener("click", () => {
+      pauseTimer();
+      renderPlayers();
+      show("screen-players");
+    });
+    $("btn-review-words").addEventListener("click", () => {
+      pauseTimer();
+      renderPlayers();
+      show("screen-players");
+    });
 
     $("btn-timer-toggle").addEventListener("click", toggleTimer);
     $("btn-to-vote").addEventListener("click", () => {
-      stopTimer();
+      pauseTimer();
       renderVote();
       show("screen-vote");
+    });
+    $("btn-vote-back").addEventListener("click", () => show("screen-discussion"));
+    $("btn-confirm-vote").addEventListener("click", () => {
+      if (accused >= 0) finishRound(accused);
     });
     $("btn-no-vote").addEventListener("click", () => finishRound(null));
 

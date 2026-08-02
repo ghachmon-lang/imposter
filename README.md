@@ -14,11 +14,14 @@ Built as a dependency-free web app: one phone, no internet, no install.
 ## Features
 
 - 🎭 3–12 players with editable names, 1–3 imposters
-- 📚 24 categories × 3 difficulty levels (~970 words), or fully random
-- ⏱️ Optional discussion timer (1–5 minutes)
+- 🔤 **Word Game** — find who doesn't know the secret word
+- ❓ **Question Game** — everyone answers their question aloud, but one player unknowingly got a different question
+- 📚 24 categories × 3 difficulty levels (~970 words), multi-select or all
+- ⏱️ Optional discussion timer (1–5 minutes) with pause/resume
 - 💡 Optional category hint for the imposter
-- 🏆 Running score across rounds, with a fresh word every round
-- 📴 Fully offline, no dependencies — plain HTML/CSS/JS
+- 🗳️ Select-then-confirm voting, forgot-your-word review, end-round safety tap
+- 🏆 Running score across rounds, with a fresh word/question every round
+- 📱 Screen wake lock during rounds (where supported), fully offline, no dependencies
 
 ## Run it
 
@@ -35,10 +38,11 @@ It's a static site, so it can be hosted anywhere (GitHub Pages works out of the 
 ## Project structure
 
 ```
-index.html      All screens (home, setup, reveal, discussion, vote, result)
-css/style.css   Dark party-game theme, mobile-first
-js/words.js     Word lists: 24 categories × easy/medium/hard
-js/app.js       Game state, role dealing, timer, voting, scoring
+index.html       All screens (home, settings, categories, players, reveal, discussion, vote, result)
+css/style.css    Dark party-game theme, mobile-first
+js/words.js      Word lists: 24 categories × easy/medium/hard
+js/questions.js  Question pairs for the Question Game
+js/app.js        Game state, role dealing, timer, voting, scoring
 ```
 
 ## The original app

@@ -49,12 +49,19 @@
       </header>
       <h1 class="page-title">How to Play</h1>
       <div class="card help-card">
+        <p class="help-mode">🔤 Word Game</p>
         <ol class="help-list">
           <li><strong>Deal the roles.</strong> Each player taps their name and secretly reveals their word — everyone gets the secret word, except the imposter.</li>
           <li><strong>Give clues.</strong> Going around the circle, each player says <em>one word</em> related to the secret word. The imposter has to improvise and blend in.</li>
           <li><strong>Discuss.</strong> Too vague? Too obvious? Debate who doesn't seem to know the word.</li>
-          <li><strong>Vote.</strong> Point at your suspect on three, then record the group's accusation.</li>
+          <li><strong>Vote.</strong> Pick a suspect together and confirm the group's accusation.</li>
           <li><strong>Reveal.</strong> If the imposter is caught, they get one chance to guess the secret word and steal the win. If an innocent player is accused, the imposter wins.</li>
+        </ol>
+        <p class="help-mode">❓ Question Game</p>
+        <ol class="help-list">
+          <li>Everyone secretly reads their question — but one player, without knowing it, gets a <em>different</em> question.</li>
+          <li>Going around the circle, everyone answers their own question out loud.</li>
+          <li>One answer won't quite fit. Discuss, vote, and find who got the different question!</li>
         </ol>
         <p class="help-tip">💡 Tip: clues that are too specific hand the word to the imposter — clues that are too vague make <em>you</em> look like the imposter.</p>
       </div>
@@ -90,37 +97,39 @@
 
       <h2 class="section-head"><svg><use href="#i-gamepad"/></svg>Game Mode</h2>
       <div class="mode-row">
-        <div class="mode-card mode-selected">
+        <button class="mode-card" id="mode-word" data-mode="word">
           <svg class="mode-icon"><use href="#i-letters"/></svg>
           <p class="mode-name">Word Game</p>
           <p class="mode-desc">Find who doesn't know the secret word</p>
-        </div>
-        <div class="mode-card mode-disabled">
+        </button>
+        <button class="mode-card" id="mode-question" data-mode="question">
           <svg class="mode-icon"><use href="#i-question"/></svg>
           <p class="mode-name">Question Game</p>
-          <p class="mode-desc">Coming soon</p>
-        </div>
-      </div>
-
-      <h2 class="section-head"><svg><use href="#i-shapes"/></svg>Categories</h2>
-      <div class="card categories-card">
-        <button class="cat-summary-row" id="btn-open-categories">
-          <span class="cat-summary" id="cat-summary">All categories</span>
-          <span class="chev-chip"><svg><use href="#i-chevron-right"/></svg></span>
+          <p class="mode-desc">Find who got a different question</p>
         </button>
-        <div class="divider"></div>
-        <label class="row-between toggle-row">
-          <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg>Show Category to Imposter</span>
-          <input type="checkbox" id="hint-toggle" class="toggle" checked>
-        </label>
       </div>
 
-      <h2 class="section-head"><svg><use href="#i-dial"/></svg>Difficulty</h2>
-      <div class="chips" id="difficulty-chips">
-        <button class="chip" data-difficulty="easy">Easy</button>
-        <button class="chip" data-difficulty="medium">Medium</button>
-        <button class="chip" data-difficulty="hard">Hard</button>
-        <button class="chip chip-selected" data-difficulty="mixed">Mixed</button>
+      <div id="word-only-settings" class="sub-stack">
+        <h2 class="section-head"><svg><use href="#i-shapes"/></svg>Categories</h2>
+        <div class="card categories-card">
+          <button class="cat-summary-row" id="btn-open-categories">
+            <span class="cat-summary" id="cat-summary">All categories</span>
+            <span class="chev-chip"><svg><use href="#i-chevron-right"/></svg></span>
+          </button>
+          <div class="divider"></div>
+          <label class="row-between toggle-row">
+            <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg>Show Category to Imposter</span>
+            <input type="checkbox" id="hint-toggle" class="toggle" checked>
+          </label>
+        </div>
+
+        <h2 class="section-head"><svg><use href="#i-dial"/></svg>Difficulty</h2>
+        <div class="chips" id="difficulty-chips">
+          <button class="chip" data-difficulty="easy">Easy</button>
+          <button class="chip" data-difficulty="medium">Medium</button>
+          <button class="chip" data-difficulty="hard">Hard</button>
+          <button class="chip chip-selected" data-difficulty="mixed">Mixed</button>
+        </div>
       </div>
 
       <h2 class="section-head"><svg><use href="#i-clock"/></svg>Discussion Timer</h2>
@@ -151,22 +160,26 @@
 
     <!-- PLAYERS (reveal hub) -->
     <section class="screen" id="screen-players">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-end-round" aria-label="End round"><svg><use href="#i-chevron-left"/></svg></button>
+        <span class="end-hint hidden" id="end-hint">Tap again to end the round</span>
+      </header>
       <h1 class="page-title">Players</h1>
-      <p class="page-sub">Tap your name to reveal your word, then pass the device to the next player.</p>
+      <p class="page-sub" id="players-sub">Tap your name to reveal your word, then pass the device to the next player.</p>
       <div class="player-grid" id="player-grid"></div>
       <div class="bottom-space"></div>
       <button class="btn btn-primary hidden" id="btn-to-discussion">Start Discussion</button>
     </section>
 
-    <!-- WORD REVEAL -->
+    <!-- WORD / QUESTION REVEAL -->
     <section class="screen" id="screen-word">
       <header class="topbar">
         <button class="icon-btn" id="btn-word-back" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
       </header>
       <div class="word-wrap">
-        <p class="word-for">The word for <span class="word-name" id="word-player-name"></span></p>
+        <p class="word-for"><span id="word-for-label">The word for</span> <span class="word-name" id="word-player-name"></span></p>
         <h2 class="word-category" id="word-category"></h2>
-        <button class="word-box" id="word-box" aria-label="Reveal your word">
+        <button class="word-box" id="word-box" aria-label="Reveal">
           <canvas id="confetti-canvas"></canvas>
           <div class="word-content hidden" id="word-content">
             <p class="word-text" id="word-text"></p>
@@ -180,12 +193,16 @@
 
     <!-- DISCUSSION -->
     <section class="screen" id="screen-discussion">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-discussion-back" aria-label="Back to players"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
       <h1 class="page-title">Discussion</h1>
-      <p class="page-sub">One clue word each, then debate. When you're ready, take the vote.</p>
+      <p class="page-sub" id="discussion-sub">One clue word each, then debate. When you're ready, take the vote.</p>
+      <p class="discussion-category hidden" id="discussion-category"></p>
       <div class="card starter-card">
         <div class="avatar" id="starter-avatar"></div>
         <div>
-          <p class="starter-label">First clue</p>
+          <p class="starter-label" id="starter-label">First clue</p>
           <p class="starter-name" id="starter-name"></p>
           <p class="starter-sub" id="starter-direction"></p>
         </div>
@@ -195,16 +212,25 @@
         <button class="btn btn-ghost btn-small" id="btn-timer-toggle">Start Timer</button>
       </div>
       <div class="bottom-space"></div>
-      <button class="btn btn-primary" id="btn-to-vote">Go to Vote</button>
+      <div class="stack">
+        <button class="btn btn-primary" id="btn-to-vote">Go to Vote</button>
+        <button class="btn btn-ghost" id="btn-review-words">Forgot your word? Review</button>
+      </div>
     </section>
 
     <!-- VOTE -->
     <section class="screen" id="screen-vote">
-      <h1 class="page-title">Who is the imposter?</h1>
-      <p class="page-sub">Point at your suspect on three — then tap the group's accusation.</p>
+      <header class="topbar">
+        <button class="icon-btn" id="btn-vote-back" aria-label="Back to discussion"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <h1 class="page-title" id="vote-title">Who is the imposter?</h1>
+      <p class="page-sub">Agree on a suspect, tap their name, then confirm the accusation.</p>
       <div class="player-grid" id="vote-grid"></div>
       <div class="bottom-space"></div>
-      <button class="btn btn-ghost" id="btn-no-vote">Skip vote — just reveal</button>
+      <div class="stack">
+        <button class="btn btn-primary hidden" id="btn-confirm-vote">Confirm Accusation</button>
+        <button class="btn btn-ghost" id="btn-no-vote">Skip vote — just reveal</button>
+      </div>
     </section>
 
     <!-- RESULT -->
@@ -214,8 +240,12 @@
         <h2 class="result-title" id="result-title"></h2>
         <p class="result-sub" id="result-sub"></p>
         <div class="card reveal-word-card">
-          <p class="reveal-word-label">The secret word was</p>
+          <p class="reveal-word-label" id="result-word-label">The secret word was</p>
           <p class="reveal-word" id="result-word"></p>
+          <div id="result-imposter-q" class="hidden">
+            <p class="reveal-word-label imposter-q-label">The imposter's question was</p>
+            <p class="reveal-word imposter-q" id="result-imposter-q-text"></p>
+          </div>
           <p class="result-imposters" id="result-imposters"></p>
         </div>
         <p class="steal-note" id="steal-note"></p>
@@ -229,6 +259,7 @@
 
   </main>
   <script src="js/words.js"></script>
+  <script src="js/questions.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
