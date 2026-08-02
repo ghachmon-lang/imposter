@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0a18">
+  <title>Imposter — Party Game</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Imposter">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4" fill="currentColor"/><path d="M2.5 19c.6-3.4 3.3-5.2 6.5-5.2s5.9 1.8 6.5 5.2z" fill="currentColor"/><circle cx="17" cy="9" r="2.6" fill="currentColor"/><path d="M16.2 13.6c2.8.2 4.8 1.9 5.3 4.9h-4.2c-.3-2-1.2-3.7-2.7-4.7.5-.1 1-.2 1.6-.2z" fill="currentColor"/></symbol>
+      <symbol id="i-spy" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4" fill="currentColor"/><path d="M3.5 19c.6-3.4 3.3-5.2 6.5-5.2 1.5 0 2.9.4 4 1.1a5.5 5.5 0 0 0-1.8 4.1z" fill="currentColor"/><circle cx="17" cy="17" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 19.4l2.4 2.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M9 4h6v3.5h3.5v6H15V17H9v-3.5H5.5v-6H9z" fill="currentColor" transform="rotate(45 12 10.5) scale(.82) translate(2.6 2.2)"/></symbol>
+      <symbol id="i-shapes" viewBox="0 0 24 24"><path d="M8 3.5L12.5 11h-9z" fill="currentColor"/><circle cx="16.5" cy="16.5" r="4" fill="currentColor"/><rect x="3.5" y="13.5" width="6.5" height="6.5" rx="1.4" fill="currentColor"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 5.5C6.8 5.5 3 10 2 12c1 2 4.8 6.5 10 6.5S21 14 22 12c-1-2-4.8-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="2.8" fill="currentColor"/></symbol>
+      <symbol id="i-dial" viewBox="0 0 24 24"><path d="M4 8h9M17.5 8H20M4 16h3M11.5 16H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15.2" cy="8" r="2.4" fill="currentColor"/><circle cx="9.2" cy="16" r="2.4" fill="currentColor"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 7.5V12l3 2.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+      <symbol id="i-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.6c-.8.5-1.2 1-1.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.2" fill="currentColor"/></symbol>
+      <symbol id="i-letters" viewBox="0 0 24 24"><text x="3" y="16" font-size="14" font-weight="800" fill="currentColor" font-family="inherit">T</text><text x="12.5" y="18" font-size="10.5" font-weight="800" fill="currentColor" font-family="inherit">T</text></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <main id="app">
+
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <header class="topbar home-topbar">
+        <span></span>
+        <button class="text-btn" id="btn-lang" data-i18n="langToggle">עברית</button>
+      </header>
+      <div class="home-hero">
+        <div class="home-mask">🎭</div>
+        <h1 class="home-title" data-i18n="appTitle">Imposter</h1>
+        <p class="home-tagline" data-i18n-html="tagline">Everyone knows the secret word.<br>Except one of you.</p>
+      </div>
+      <div class="stack">
+        <button class="btn btn-primary" id="btn-new-game" data-i18n="newGame">New Game</button>
+        <button class="btn btn-ghost" id="btn-how-to" data-i18n="howToPlay">How to Play</button>
+      </div>
+      <p class="home-foot" data-i18n="homeFoot">Pass &amp; play · works offline · 3–12 players</p>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section class="screen" id="screen-help">
+      <header class="topbar">
+        <button class="icon-btn" data-back="screen-home" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <h1 class="page-title" data-i18n="helpTitle">How to Play</h1>
+      <div class="card help-card">
+        <p class="help-mode" data-i18n="helpWordTitle">🔤 Word Game</p>
+        <ol class="help-list" data-i18n-html="helpWordList"></ol>
+        <p class="help-mode" data-i18n="helpQuestionTitle">❓ Question Game</p>
+        <ol class="help-list" data-i18n-html="helpQuestionList"></ol>
+        <p class="help-tip" data-i18n-html="helpTip"></p>
+      </div>
+    </section>
+
+    <!-- GAME SETTINGS -->
+    <section class="screen" id="screen-setup">
+      <header class="topbar">
+        <button class="icon-btn" data-back="screen-home" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <h1 class="page-title" data-i18n="settingsTitle">Game Settings</h1>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <span class="stat-icon"><svg><use href="#i-users"/></svg></span>
+          <p class="stat-label" data-i18n="howManyPlayers">How many players?</p>
+          <div class="stat-stepper">
+            <button class="stepper-btn" id="players-minus" aria-label="Fewer players">−</button>
+            <span class="stat-value" id="players-count">4</span>
+            <button class="stepper-btn" id="players-plus" aria-label="More players">+</button>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon"><svg><use href="#i-spy"/></svg></span>
+          <p class="stat-label" data-i18n="howManyImposters">How many imposters?</p>
+          <div class="stat-stepper">
+            <button class="stepper-btn" id="imposters-minus" aria-label="Fewer imposters">−</button>
+            <span class="stat-value" id="imposters-count">1</span>
+            <button class="stepper-btn" id="imposters-plus" aria-label="More imposters">+</button>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-head"><svg><use href="#i-gamepad"/></svg><span data-i18n="gameMode">Game Mode</span></h2>
+      <div class="mode-row">
+        <button class="mode-card" id="mode-word" data-mode="word">
+          <svg class="mode-icon"><use href="#i-letters"/></svg>
+          <p class="mode-name" data-i18n="wordGame">Word Game</p>
+          <p class="mode-desc" data-i18n="wordGameDesc">Find who doesn't know the secret word</p>
+        </button>
+        <button class="mode-card" id="mode-question" data-mode="question">
+          <svg class="mode-icon"><use href="#i-question"/></svg>
+          <p class="mode-name" data-i18n="questionGame">Question Game</p>
+          <p class="mode-desc" data-i18n="questionGameDesc">Find who got a different question</p>
+        </button>
+      </div>
+
+      <div class="card">
+        <label class="row-between toggle-row">
+          <span class="toggle-label"><svg class="row-icon"><use href="#i-spy"/></svg><span data-i18n="imposterFirst">Imposter Can Go First</span></span>
+          <input type="checkbox" id="first-toggle" class="toggle" checked>
+        </label>
+        <p class="card-hint" data-i18n="imposterFirstHint">When off, the first clue or answer never comes from the imposter.</p>
+      </div>
+
+      <div id="word-only-settings" class="sub-stack">
+        <h2 class="section-head"><svg><use href="#i-shapes"/></svg><span data-i18n="categories">Categories</span></h2>
+        <div class="card categories-card">
+          <button class="cat-summary-row" id="btn-open-categories">
+            <span class="cat-summary" id="cat-summary">All categories</span>
+            <span class="chev-chip"><svg><use href="#i-chevron-right"/></svg></span>
+          </button>
+          <div class="divider"></div>
+          <label class="row-between toggle-row">
+            <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg><span data-i18n="showCategory">Show Category to Imposter</span></span>
+            <input type="checkbox" id="hint-toggle" class="toggle" checked>
+          </label>
+        </div>
+
+        <h2 class="section-head"><svg><use href="#i-dial"/></svg><span data-i18n="difficulty">Difficulty</span></h2>
+        <div class="chips" id="difficulty-chips">
+          <button class="chip" data-difficulty="easy" data-i18n="diffEasy">Easy</button>
+          <button class="chip" data-difficulty="medium" data-i18n="diffMedium">Medium</button>
+          <button class="chip" data-difficulty="hard" data-i18n="diffHard">Hard</button>
+          <button class="chip chip-selected" data-difficulty="mixed" data-i18n="diffMixed">Mixed</button>
+        </div>
+      </div>
+
+      <h2 class="section-head"><svg><use href="#i-clock"/></svg><span data-i18n="discussionTimer">Discussion Timer</span></h2>
+      <div class="chips" id="timer-chips">
+        <button class="chip" data-timer="0" data-i18n="timerOff">Off</button>
+        <button class="chip" data-timer="60" data-i18n="timer1">1 min</button>
+        <button class="chip chip-selected" data-timer="120" data-i18n="timer2">2 min</button>
+        <button class="chip" data-timer="180" data-i18n="timer3">3 min</button>
+        <button class="chip" data-timer="300" data-i18n="timer5">5 min</button>
+      </div>
+
+      <h2 class="section-head"><svg><use href="#i-users"/></svg><span data-i18n="playerNames">Player Names</span></h2>
+      <div id="player-names" class="player-names"></div>
+
+      <div class="bottom-space"></div>
+      <button class="btn btn-primary" id="btn-start" data-i18n="startGame">Start Game</button>
+    </section>
+
+    <!-- CATEGORY SELECTION -->
+    <section class="screen" id="screen-categories">
+      <header class="topbar">
+        <button class="icon-btn" data-back="screen-setup" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
+        <button class="text-btn" id="btn-select-toggle">Deselect all</button>
+      </header>
+      <h1 class="page-title" data-i18n="categorySelection">Category Selection</h1>
+      <div class="cat-grid" id="cat-grid"></div>
+    </section>
+
+    <!-- PLAYERS (reveal hub) -->
+    <section class="screen" id="screen-players">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-end-round" aria-label="End round"><svg><use href="#i-chevron-left"/></svg></button>
+        <span class="end-hint hidden" id="end-hint" data-i18n="endHint">Tap again to end the round</span>
+      </header>
+      <h1 class="page-title" data-i18n="players">Players</h1>
+      <p class="page-sub" id="players-sub">Tap your name to reveal your word, then pass the device to the next player.</p>
+      <div class="player-grid" id="player-grid"></div>
+      <div class="bottom-space"></div>
+      <button class="btn btn-primary hidden" id="btn-to-discussion" data-i18n="startDiscussion">Start Discussion</button>
+    </section>
+
+    <!-- WORD / QUESTION REVEAL -->
+    <section class="screen" id="screen-word">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-word-back" aria-label="Back"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <div class="word-wrap">
+        <p class="word-for"><span id="word-for-label">The word for</span> <span class="word-name" id="word-player-name"></span></p>
+        <h2 class="word-category" id="word-category"></h2>
+        <button class="word-box" id="word-box" aria-label="Reveal">
+          <canvas id="confetti-canvas"></canvas>
+          <div class="word-content hidden" id="word-content">
+            <p class="word-text" id="word-text"></p>
+            <p class="word-note hidden" id="word-note"></p>
+          </div>
+        </button>
+        <p class="tap-hint" id="tap-hint" data-i18n="tapToReveal">👆 Tap the box to reveal</p>
+        <button class="btn btn-primary hidden" id="btn-got-it" data-i18n="gotIt">Got it!</button>
+      </div>
+    </section>
+
+    <!-- DISCUSSION -->
+    <section class="screen" id="screen-discussion">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-discussion-back" aria-label="Back to players"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <h1 class="page-title" data-i18n="discussion">Discussion</h1>
+      <p class="page-sub" id="discussion-sub">One clue word each, then debate. When you're ready, take the vote.</p>
+      <p class="discussion-category hidden" id="discussion-category"></p>
+      <div class="card starter-card">
+        <div class="avatar" id="starter-avatar"></div>
+        <div>
+          <p class="starter-label" id="starter-label">First clue</p>
+          <p class="starter-name" id="starter-name"></p>
+          <p class="starter-sub" id="starter-direction"></p>
+        </div>
+      </div>
+      <div class="timer" id="timer-block">
+        <div class="timer-display" id="timer-display">2:00</div>
+        <button class="btn btn-ghost btn-small" id="btn-timer-toggle">Start Timer</button>
+      </div>
+      <div class="bottom-space"></div>
+      <div class="stack">
+        <button class="btn btn-primary" id="btn-to-vote" data-i18n="goToVote">Go to Vote</button>
+        <button class="btn btn-ghost" id="btn-review-words">Forgot your word? Review</button>
+      </div>
+    </section>
+
+    <!-- VOTE -->
+    <section class="screen" id="screen-vote">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-vote-back" aria-label="Back to discussion"><svg><use href="#i-chevron-left"/></svg></button>
+      </header>
+      <h1 class="page-title" id="vote-title">Who is the imposter?</h1>
+      <p class="page-sub" data-i18n="voteSub">Agree on a suspect, tap their name, then confirm the accusation.</p>
+      <div class="player-grid" id="vote-grid"></div>
+      <div class="bottom-space"></div>
+      <div class="stack">
+        <button class="btn btn-primary hidden" id="btn-confirm-vote" data-i18n="confirmVote">Confirm Accusation</button>
+        <button class="btn btn-ghost" id="btn-no-vote" data-i18n="skipVote">Skip vote — just reveal</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screen-result">
+      <div class="result-wrap">
+        <div class="result-emoji" id="result-emoji"></div>
+        <h2 class="result-title" id="result-title"></h2>
+        <p class="result-sub" id="result-sub"></p>
+        <div class="card reveal-word-card">
+          <p class="reveal-word-label" id="result-word-label">The secret word was</p>
+          <p class="reveal-word" id="result-word"></p>
+          <div id="result-imposter-q" class="hidden">
+            <p class="reveal-word-label imposter-q-label" data-i18n="imposterQuestionWas">The imposter's question was</p>
+            <p class="reveal-word imposter-q" id="result-imposter-q-text"></p>
+          </div>
+          <p class="result-imposters" id="result-imposters"></p>
+        </div>
+        <p class="steal-note" id="steal-note"></p>
+        <p class="scoreboard" id="scoreboard"></p>
+        <div class="stack">
+          <button class="btn btn-primary" id="btn-play-again" data-i18n="playAgain">Play Again</button>
+          <button class="btn btn-ghost" id="btn-change-setup" data-i18n="changeSetup">Change Setup</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <script src="js/i18n.js"></script>
+  <script src="js/words.js"></script>
+  <script src="js/words-he.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/questions-he.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
