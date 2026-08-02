@@ -13,6 +13,7 @@
     categories: [...ALL_KEYS],
     difficulty: "mixed",
     showHint: true,
+    imposterCanStart: true,
     timerSeconds: 120,
   };
 
@@ -104,6 +105,7 @@
       }
       if (["easy", "medium", "hard", "mixed"].includes(saved.difficulty)) settings.difficulty = saved.difficulty;
       if (typeof saved.showHint === "boolean") settings.showHint = saved.showHint;
+      if (typeof saved.imposterCanStart === "boolean") settings.imposterCanStart = saved.imposterCanStart;
       if (typeof saved.timerSeconds === "number") settings.timerSeconds = saved.timerSeconds;
       settings.imposterCount = Math.max(1, Math.min(settings.imposterCount, maxImposters(settings.playerCount)));
     } catch (e) { /* corrupt storage — fall back to defaults */ }
@@ -203,6 +205,7 @@
       chip.classList.toggle("chip-selected", Number(chip.dataset.timer) === settings.timerSeconds);
     });
     $("hint-toggle").checked = settings.showHint;
+    $("first-toggle").checked = settings.imposterCanStart;
   }
 
   // ---------- category selection screen ----------
@@ -304,7 +307,13 @@
     round.current = -1;
     round.revealed = false;
     round.discussionStarted = false;
-    round.starter = randomInt(settings.playerCount);
+    if (settings.imposterCanStart) {
+      round.starter = randomInt(settings.playerCount);
+    } else {
+      const innocents = [...Array(settings.playerCount).keys()]
+        .filter((i) => !round.imposters.includes(i));
+      round.starter = sample(innocents);
+    }
     round.clockwise = Math.random() < 0.5;
     accused = -1;
     acquireWakeLock();
@@ -697,6 +706,10 @@
     });
     $("hint-toggle").addEventListener("change", (e) => {
       settings.showHint = e.target.checked;
+      saveSettings();
+    });
+    $("first-toggle").addEventListener("change", (e) => {
+      settings.imposterCanStart = e.target.checked;
       saveSettings();
     });
 
