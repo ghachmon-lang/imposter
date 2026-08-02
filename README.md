@@ -23,17 +23,26 @@ Built as a dependency-free web app: one phone, no internet, no install.
 - 🏆 Running score across rounds, with a fresh word/question every round
 - 📱 Screen wake lock during rounds (where supported), fully offline, no dependencies
 
-## Run it
+## Install it as an app
 
-Open `index.html` in any browser — that's it. For a local server:
+The game is a PWA, deployed to GitHub Pages by `.github/workflows/pages.yml`:
+
+**https://ghachmon-lang.github.io/imposter/**
+
+- **iPhone/iPad:** open the link in Safari → Share → **Add to Home Screen**
+- **Android:** open the link in Chrome → menu → **Add to Home screen** / **Install app**
+
+It launches fullscreen with its own icon and works completely offline after the first load (service worker cache).
+
+## Run it locally
+
+Open `index.html` in any browser — that's it. For a local server (needed to test the service worker):
 
 ```sh
 npx serve .
 # or
 python3 -m http.server
 ```
-
-It's a static site, so it can be hosted anywhere (GitHub Pages works out of the box).
 
 ## Project structure
 
