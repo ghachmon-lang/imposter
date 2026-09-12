@@ -228,6 +228,7 @@ body {
 
 .toggle-row { cursor: pointer; padding: 4px 0; }
 .card-hint { color: var(--dim); font-size: 0.9rem; line-height: 1.4; margin-top: 8px; }
+.categories-card .card-hint { margin-top: -2px; }
 .toggle-label { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; }
 .row-icon { width: 22px; height: 22px; color: var(--purple); flex: none; }
 
@@ -392,10 +393,15 @@ body {
   position: relative;
   width: 100%;
   aspect-ratio: 10 / 7;
+  display: flex; flex-direction: column;
   background: var(--bg-card);
   border: none;
   border-radius: 26px;
+  /* clip (not hidden): a scroll container loses the automatic minimum height
+     of an aspect-ratio box, and the box must grow when the content is taller.
+     Older browsers without clip fall back to hidden. */
   overflow: hidden;
+  overflow: clip;
   cursor: pointer;
   padding: 0;
   margin-top: 10px;
@@ -404,8 +410,10 @@ body {
 .word-box.revealed { cursor: default; }
 .word-box.revealed #confetti-canvas { display: none; }
 
+/* In normal flow (not absolutely positioned) so the box can grow past its
+   aspect ratio when the imposter's hint makes the content taller. */
 .word-content {
-  position: absolute; inset: 0;
+  position: relative; width: 100%; flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
   padding: 16px;
   animation: fade-in 0.3s ease;
@@ -421,6 +429,27 @@ body {
   text-shadow: 0 0 12px rgba(244, 114, 182, 0.9), 0 0 34px rgba(244, 114, 182, 0.45);
 }
 .word-note { color: var(--dim); font-size: 1rem; line-height: 1.45; }
+
+.word-content.with-hint .word-text { font-size: 2rem; }
+.word-hint { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 100%; }
+.word-hint-label {
+  color: var(--dim); font-size: 0.8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.word-hint-pattern {
+  font-size: 1.5rem; font-weight: 800; line-height: 1.35;
+  color: var(--mint);
+  text-shadow: 0 0 12px rgba(45, 212, 191, 0.9), 0 0 34px rgba(45, 212, 191, 0.45);
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+}
+.word-hint-pattern.long { font-size: 1.2rem; }
+.hint-word {
+  display: inline-block; max-width: 100%;
+  letter-spacing: 0.28em; margin: 0 0.5em;
+  overflow-wrap: anywhere;
+}
+.word-hint-caption { color: var(--dim); font-size: 0.9rem; font-weight: 600; }
 
 .word-text.question-text {
   font-size: 1.55rem; font-weight: 700; line-height: 1.4;

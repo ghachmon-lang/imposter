@@ -129,6 +129,12 @@
             <span class="toggle-label"><svg class="row-icon"><use href="#i-eye"/></svg><span data-i18n="showCategory">Show Category to Imposter</span></span>
             <input type="checkbox" id="hint-toggle" class="toggle" checked>
           </label>
+          <div class="divider"></div>
+          <label class="row-between toggle-row">
+            <span class="toggle-label"><svg class="row-icon"><use href="#i-letters"/></svg><span data-i18n="wordHint">Word Hint for Imposter</span></span>
+            <input type="checkbox" id="word-hint-toggle" class="toggle">
+          </label>
+          <p class="card-hint" data-i18n="wordHintDesc">The imposter sees the first letter and the length of the secret word.</p>
         </div>
 
         <h2 class="section-head"><svg><use href="#i-dial"/></svg><span data-i18n="difficulty">Difficulty</span></h2>
@@ -191,6 +197,11 @@
           <canvas id="confetti-canvas"></canvas>
           <div class="word-content hidden" id="word-content">
             <p class="word-text" id="word-text"></p>
+            <div class="word-hint hidden" id="word-hint">
+              <p class="word-hint-label" data-i18n="hintLabel">Hint</p>
+              <p class="word-hint-pattern" id="word-hint-pattern" dir="auto"></p>
+              <p class="word-hint-caption" id="word-hint-caption"></p>
+            </div>
             <p class="word-note hidden" id="word-note"></p>
           </div>
         </button>

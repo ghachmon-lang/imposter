@@ -14,6 +14,7 @@
     categories: [...ALL_KEYS],
     difficulty: "mixed",
     showHint: true,
+    wordHint: false,
     imposterCanStart: true,
     timerSeconds: 120,
   };
@@ -137,6 +138,7 @@
       }
       if (["easy", "medium", "hard", "mixed"].includes(saved.difficulty)) settings.difficulty = saved.difficulty;
       if (typeof saved.showHint === "boolean") settings.showHint = saved.showHint;
+      if (typeof saved.wordHint === "boolean") settings.wordHint = saved.wordHint;
       if (typeof saved.imposterCanStart === "boolean") settings.imposterCanStart = saved.imposterCanStart;
       if (typeof saved.timerSeconds === "number") settings.timerSeconds = saved.timerSeconds;
       settings.imposterCount = Math.max(1, Math.min(settings.imposterCount, maxImposters(settings.playerCount)));
@@ -238,6 +240,7 @@
       chip.classList.toggle("chip-selected", Number(chip.dataset.timer) === settings.timerSeconds);
     });
     $("hint-toggle").checked = settings.showHint;
+    $("word-hint-toggle").checked = settings.wordHint;
     $("first-toggle").checked = settings.imposterCanStart;
   }
 
@@ -437,6 +440,37 @@
     requestAnimationFrame(drawConfetti);
   }
 
+  // The imposter's word hint, hangman-style: the first letter stays visible,
+  // every other letter becomes "_", and spaces/punctuation are kept so the
+  // shape of the word shows ("Ice cream" → "I__ _____"). Each word gets its
+  // own span so long phrases wrap between words, not inside them.
+  function renderWordHint(word) {
+    const pattern = $("word-hint-pattern");
+    pattern.innerHTML = "";
+    const words = word.split(/\s+/).filter(Boolean);
+    let letters = 0;
+    let longest = 0;
+    for (const w of words) {
+      const chars = [...w];
+      longest = Math.max(longest, chars.length);
+      const span = document.createElement("span");
+      span.className = "hint-word";
+      span.textContent = chars
+        .map((ch) => {
+          if (!/\p{L}/u.test(ch)) return ch;
+          letters += 1;
+          return letters === 1 ? ch : "_";
+        })
+        .join("");
+      pattern.appendChild(span);
+    }
+    pattern.classList.toggle("long", longest > 10);
+    $("word-hint-caption").textContent =
+      words.length > 1
+        ? fmt("hintWordsLetters", { w: words.length, n: letters })
+        : fmt("hintLetters", { n: letters });
+  }
+
   function reveal() {
     if (round.revealed) return;
     round.revealed = true;
@@ -444,13 +478,22 @@
     const isImposter = round.imposters.includes(round.current);
     const text = $("word-text");
     const note = $("word-note");
+    const content = $("word-content");
+    const hint = $("word-hint");
+    content.classList.remove("with-hint");
+    hint.classList.add("hidden");
 
     if (round.mode === "word") {
       text.classList.remove("question-text");
       if (isImposter) {
         text.textContent = t("imposterTitle");
         text.classList.add("imposter-text");
-        note.textContent = t("imposterNote");
+        if (settings.wordHint) {
+          renderWordHint(round.word);
+          hint.classList.remove("hidden");
+          content.classList.add("with-hint");
+        }
+        note.textContent = settings.wordHint ? t("imposterHintNote") : t("imposterNote");
         note.classList.remove("hidden");
       } else {
         text.textContent = round.word;
@@ -750,6 +793,10 @@
     });
     $("hint-toggle").addEventListener("change", (e) => {
       settings.showHint = e.target.checked;
+      saveSettings();
+    });
+    $("word-hint-toggle").addEventListener("change", (e) => {
+      settings.wordHint = e.target.checked;
       saveSettings();
     });
     $("first-toggle").addEventListener("change", (e) => {

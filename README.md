@@ -19,7 +19,7 @@ Built as a dependency-free web app: one phone, no internet, no install.
 - ❓ **Question Game** — everyone answers their question aloud, but one player unknowingly got a different question
 - 📚 24 categories × 3 difficulty levels (~970 words), multi-select or all
 - ⏱️ Optional discussion timer (1–5 minutes) with pause/resume
-- 💡 Optional category hint for the imposter
+- 💡 Optional hints for the imposter: the category, and/or the word's first letter and length
 - 🗳️ Select-then-confirm voting, forgot-your-word review, end-round safety tap
 - 🏆 Running score across rounds, with a fresh word/question every round
 - 📱 Screen wake lock during rounds (where supported), fully offline, no dependencies
